@@ -58,6 +58,7 @@ nav.main a:hover { color: var(--green); }
 .mode {
   font: 500 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase;
   padding: 6px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted);
+  white-space: nowrap; flex: none;
 }
 .mode.live { color: var(--green); border-color: #cfe3d4; background: #eef6ef; }
 select.mode {

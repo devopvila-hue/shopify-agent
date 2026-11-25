@@ -156,7 +156,12 @@ export class ShopStore {
     if (patch.images !== undefined) {
       next.images = (patch.images || [])
         .filter((image) => image && image.url)
-        .map((image) => ({ url: String(image.url), alt: image.alt ? String(image.alt) : '' }));
+        .slice(0, 5)
+        .map((image) => ({
+          url: String(image.url),
+          alt: image.alt ? String(image.alt) : '',
+          isDefault: Boolean(image.isDefault),
+        }));
     }
     this.data.products[productId] = next;
     this.save();

@@ -31,7 +31,7 @@ const I18N = {
     'prod.fieldTitle': 'Title', 'prod.fieldDescription': 'Description', 'prod.fieldVendor': 'Vendor',
     'prod.fieldCategory': 'Category', 'prod.fieldPrice': 'Price (net of VAT)',
     'prod.fieldTax': 'VAT %', 'prod.fieldStatus': 'Status', 'prod.fieldImages': 'Images',
-    'prod.imageUrl': 'Image URL', 'prod.addImage': 'Add image', 'prod.upload': 'Upload a file',
+    'prod.imageUrl': 'Image URL', 'prod.addImage': 'Add image', 'prod.upload': 'Upload files',
     'prod.variants': 'Variants', 'prod.stock': 'Stock', 'prod.noCategory': 'Without category',
     'cat.title': 'Categories', 'cat.new': 'New category', 'cat.name': 'Name', 'cat.slug': 'Slug',
     'cat.tax': 'VAT %', 'cat.products': 'Products', 'cat.empty': 'No categories yet.',
@@ -49,6 +49,10 @@ const I18N = {
     'set.notConnected': 'Not configured', 'set.stripeHint': 'Set STRIPE_SECRET_KEY to enable card payments.',
     'set.api': 'Tools API', 'set.apiHint': 'Every action in this panel is also a tool for AI agents.',
     'set.saved': 'Settings saved.', 'set.language': 'Panel language',
+    'prod.noImage': 'No image', 'prod.setMain': 'Show this one in the shop', 'prod.imageHint': 'Up to five. The starred one is the one the shop shows.', 'prod.tooManyImages': 'Five images is the limit.',
+    'prod.noImage': 'Sin imagen', 'prod.setMain': 'Mostrar esta en la tienda', 'prod.imageHint': 'Hasta cinco. La marcada con estrella es la que se ve en la tienda.', 'prod.tooManyImages': 'El límite son cinco imágenes.',
+    'prod.noImage': 'Fără imagine', 'prod.setMain': 'Arată asta în magazin', 'prod.imageHint': 'Până la cinci. Cea cu steaua este cea afișată în magazin.', 'prod.tooManyImages': 'Limita este de cinci imagini.',
+    'prod.noImage': 'Nincs kép', 'prod.setMain': 'Ez legyen a kirakatban', 'prod.imageHint': 'Legfelj öt. A csillagozott látható az üzletben.', 'prod.tooManyImages': 'A limit öt kép.',
     'common.save': 'Save', 'common.cancel': 'Cancel', 'common.close': 'Close', 'common.loading': 'Loading…',
     'common.error': 'Something went wrong', 'common.actions': 'Actions', 'common.name': 'Name',
     'common.total': 'Total', 'common.free': 'Free', 'common.units': 'units',
@@ -69,7 +73,7 @@ const I18N = {
     'prod.fieldTitle': 'Título', 'prod.fieldDescription': 'Descripción', 'prod.fieldVendor': 'Marca',
     'prod.fieldCategory': 'Categoría', 'prod.fieldPrice': 'Precio (sin IVA)',
     'prod.fieldTax': 'IVA %', 'prod.fieldStatus': 'Estado', 'prod.fieldImages': 'Imágenes',
-    'prod.imageUrl': 'URL de la imagen', 'prod.addImage': 'Añadir imagen', 'prod.upload': 'Subir un fichero',
+    'prod.imageUrl': 'URL de la imagen', 'prod.addImage': 'Añadir imagen', 'prod.upload': 'Subir ficheros',
     'prod.variants': 'Variantes', 'prod.stock': 'Stock', 'prod.noCategory': 'Sin categoría',
     'cat.title': 'Categorías', 'cat.new': 'Nueva categoría', 'cat.name': 'Nombre', 'cat.slug': 'Slug',
     'cat.tax': 'IVA %', 'cat.products': 'Productos', 'cat.empty': 'Todavía no hay categorías.',
@@ -107,7 +111,7 @@ const I18N = {
     'prod.fieldTitle': 'Titlu', 'prod.fieldDescription': 'Descriere', 'prod.fieldVendor': 'Brand',
     'prod.fieldCategory': 'Categorie', 'prod.fieldPrice': 'Preț (fără TVA)',
     'prod.fieldTax': 'TVA %', 'prod.fieldStatus': 'Stare', 'prod.fieldImages': 'Imagini',
-    'prod.imageUrl': 'URL imaginii', 'prod.addImage': 'Adaugă imagine', 'prod.upload': 'Încarcă un fișier',
+    'prod.imageUrl': 'URL imaginii', 'prod.addImage': 'Adaugă imagine', 'prod.upload': 'Încarcă fișiere',
     'prod.variants': 'Variante', 'prod.stock': 'Stoc', 'prod.noCategory': 'Fără categorie',
     'cat.title': 'Categorii', 'cat.new': 'Categorie nouă', 'cat.name': 'Nume', 'cat.slug': 'Slug',
     'cat.tax': 'TVA %', 'cat.products': 'Produse', 'cat.empty': 'Încă nu există categorii.',
@@ -145,7 +149,7 @@ const I18N = {
     'prod.fieldTitle': 'Cím', 'prod.fieldDescription': 'Leírás', 'prod.fieldVendor': 'Márka',
     'prod.fieldCategory': 'Kategória', 'prod.fieldPrice': 'Ár (áfa nélkül)',
     'prod.fieldTax': 'ÁFA %', 'prod.fieldStatus': 'Státusz', 'prod.fieldImages': 'Képek',
-    'prod.imageUrl': 'Kép URL', 'prod.addImage': 'Kép hozzáadása', 'prod.upload': 'Fájl feltöltése',
+    'prod.imageUrl': 'Kép URL', 'prod.addImage': 'Kép hozzáadása', 'prod.upload': 'Fájlok feltöltése',
     'prod.variants': 'Változatok', 'prod.stock': 'Készlet', 'prod.noCategory': 'Kategória nélkül',
     'cat.title': 'Kategóriák', 'cat.new': 'Új kategória', 'cat.name': 'Név', 'cat.slug': 'Slug',
     'cat.tax': 'ÁFA %', 'cat.products': 'Termékek', 'cat.empty': 'Még nincsenek kategóriák.',
@@ -408,7 +412,8 @@ function thumb(product) {
 }
 
 async function editProduct(id) {
-  const product = id ? state.products.find((p) => p.id === id) : null;
+  // Read it fresh: the list on screen may be stale after another change.
+  const product = id ? (await api('get_product', { productId: id })).product : null;
   const categories = state.categories;
   const images = product?.images || [];
 
@@ -440,16 +445,15 @@ async function editProduct(id) {
           </select></div>
       </div>
 
-      <div class="field"><label>${esc(t('prod.fieldImages'))}</label>
-        <div class="imgs" id="imgs">
-          ${images.map((image, i) => imageRow(image, i)).join('')}
-        </div>
-        <div style="display:flex;gap:8px;margin-top:8px">
+      <div class="field"><label>${esc(t('prod.fieldImages'))} <span class="muted" id="imgCount"></span></label>
+        <div class="imgs" id="imgs"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
           <button class="btn sm" id="addImg">${esc(t('prod.addImage'))}</button>
           <label class="btn sm" style="cursor:pointer">
             ${esc(t('prod.upload'))}
-            <input type="file" id="fileImg" accept="image/*" hidden>
+            <input type="file" id="fileImg" accept="image/*" multiple hidden>
           </label>
+          <span class="muted" style="font-size:12px">${esc(t('prod.imageHint'))}</span>
         </div>
       </div>
 
@@ -465,18 +469,29 @@ async function editProduct(id) {
      <button class="btn primary" id="saveBtn">${esc(t('common.save'))}</button>`,
   );
 
+  const MAX_IMAGES = 5;
   const imgs = images.map((image) => ({ ...image }));
+  if (imgs.length && !imgs.some((image) => image.isDefault)) imgs[0].isDefault = true;
 
-  function imageRow(image, index) {
-    return `<div class="img-row" data-index="${index}">
-      <span class="thumb">${image.url ? `<img src="${esc(image.url)}" alt="">` : ''}</span>
+  function imageCell(image, index) {
+    const main = image.isDefault || (index === 0 && !imgs.some((i) => i.isDefault));
+    return `<div class="img-cell${main ? ' main' : ''}" data-index="${index}">
+      <div class="img-view">${
+        image.url
+          ? `<img src="${esc(image.url)}" alt="" data-preview="${index}">`
+          : `<span class="img-empty">${esc(t('prod.noImage'))}</span>`
+      }</div>
       <input value="${esc(image.url || '')}" data-url="${index}" placeholder="${esc(t('prod.imageUrl'))}">
-      <button class="btn sm danger" data-rmimg="${index}">×</button>
+      <div class="img-bar">
+        <button class="star${main ? ' on' : ''}" data-star="${index}" title="${esc(t('prod.setMain'))}">★</button>
+        <button class="rm" data-rmimg="${index}" title="${esc(t('prod.delete'))}">×</button>
+      </div>
     </div>`;
   }
 
   function redrawImages() {
-    $('#imgs').innerHTML = imgs.map((image, i) => imageRow(image, i)).join('');
+    $('#imgs').innerHTML = imgs.map((image, i) => imageCell(image, i)).join('');
+    $('#imgCount').textContent = `${imgs.length} / ${MAX_IMAGES}`;
     bindImageEvents();
   }
 
@@ -485,44 +500,73 @@ async function editProduct(id) {
       input.oninput = () => {
         const index = Number(input.dataset.url);
         imgs[index].url = input.value;
-        const thumbEl = input.closest('.img-row').querySelector('.thumb');
-        thumbEl.innerHTML = input.value ? `<img src="${esc(input.value)}" alt="">` : '';
+        const cell = input.closest('.img-cell');
+        const preview = cell.querySelector('.img-view');
+        preview.innerHTML = input.value
+          ? `<img src="${esc(input.value)}" alt="" data-preview="${index}">`
+          : `<span class="img-empty">${esc(t('prod.noImage'))}</span>`;
+      };
+    });
+    $$('#imgs [data-star]').forEach((button) => {
+      button.onclick = () => {
+        const index = Number(button.dataset.star);
+        imgs.forEach((image, i) => { image.isDefault = i === index; });
+        redrawImages();
       };
     });
     $$('#imgs [data-rmimg]').forEach((button) => {
       button.onclick = () => {
-        imgs.splice(Number(button.dataset.rmimg), 1);
+        const index = Number(button.dataset.rmimg);
+        const wasMain = imgs[index].isDefault;
+        imgs.splice(index, 1);
+        if (wasMain && imgs.length) imgs[0].isDefault = true;
         redrawImages();
       };
     });
   }
-  bindImageEvents();
+  redrawImages();
 
   $('#addImg').onclick = () => {
-    imgs.push({ url: '', alt: '' });
+    if (imgs.length >= MAX_IMAGES) {
+      toast(t('prod.tooManyImages'), true);
+      return;
+    }
+    imgs.push({ url: '', alt: '', isDefault: imgs.length === 0 });
     redrawImages();
   };
 
   $('#fileImg').onchange = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    try {
-      const base64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result).split(',')[1]);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      const result = await api('upload_image', {
-        filename: file.name,
-        contentBase64: base64,
-        mimeType: file.type,
-      });
-      imgs.push({ url: result.url, alt: file.name });
-      redrawImages();
-      toast(t('prod.saved'));
-    } catch (err) {
-      toast(err.message, true);
+    const files = [...(event.target.files || [])];
+    event.target.value = '';
+    if (!files.length) return;
+    const room = MAX_IMAGES - imgs.length;
+    if (room <= 0) {
+      toast(t('prod.tooManyImages'), true);
+      return;
+    }
+    if (files.length > room) toast(t('prod.tooManyImages'), true);
+    for (const file of files.slice(0, room)) {
+      try {
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result).split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        const result = await api('upload_image', {
+          filename: file.name,
+          contentBase64: base64,
+          mimeType: file.type,
+        });
+        imgs.push({
+          url: result.url,
+          alt: file.name,
+          isDefault: imgs.length === 0,
+        });
+        redrawImages();
+      } catch (err) {
+        toast(`${file.name}: ${err.message}`, true);
+      }
     }
   };
 
@@ -538,7 +582,14 @@ async function editProduct(id) {
         vendor: $('#fVendor').value.trim(),
         status: $('#fStatus').value,
         categoryId: $('#fCategory').value || null,
-        images: imgs.filter((image) => image.url).map((image) => ({ url: image.url, alt: image.alt || '' })),
+        images: imgs
+          .filter((image) => image.url)
+          .slice(0, MAX_IMAGES)
+          .map((image, index) => ({
+            url: image.url,
+            alt: image.alt || '',
+            isDefault: image.isDefault || index === 0,
+          })),
       };
       const tax = $('#fTax').value.trim();
       if (tax !== '') payload.taxRate = Number(tax);

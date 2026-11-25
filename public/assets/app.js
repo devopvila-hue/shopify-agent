@@ -182,9 +182,10 @@ function art(product, size = 400) {
 /** Real image when the product has one, generated art otherwise. */
 function shot(product, size = 400) {
   const images = product.images || [];
-  if (images.length && images[0].url) {
-    const src = esc(images[0].url);
-    const alt = esc(images[0].alt || product.title);
+  const main = images.find((image) => image.isDefault) || images[0];
+  if (main && main.url) {
+    const src = esc(main.url);
+    const alt = esc(main.alt || product.title);
     return `<img src="${src}" alt="${alt}" loading="lazy" data-pid="${esc(product.id)}" data-size="${size}" style="width:100%;height:auto;display:block">`;
   }
   return art(product, size);
@@ -409,6 +410,7 @@ function themeSelect() {
       const theme = state.themes.find((t) => t.id === select.value);
       applyTheme(theme);
       localStorage.setItem('aurora.theme', theme.id);
+      localStorage.setItem('aurora.theme.default', state.shop?.theme?.id || 'aurora');
       const url = new URL(window.location.href);
       url.searchParams.set('theme', theme.id);
       window.history.replaceState({}, '', url);
@@ -933,11 +935,14 @@ async function boot() {
 
   const injected = window.__SHOP__ || {};
   state.themes = injected.themes || [];
+  // ?theme= always wins. After that the shop default does, unless the
+  // visitor picked a template themselves for this same default.
+  const shopDefault = injected.theme?.id || 'aurora';
+  const stored = localStorage.getItem('aurora.theme');
+  const storedFor = localStorage.getItem('aurora.theme.default');
+  const remembered = stored && storedFor === shopDefault ? stored : null;
   const wanted =
-    new URL(window.location.href).searchParams.get('theme') ||
-    localStorage.getItem('aurora.theme') ||
-    injected.theme?.id ||
-    'aurora';
+    new URL(window.location.href).searchParams.get('theme') || remembered || shopDefault;
   const active = state.themes.find((t) => t.id === wanted) || injected.theme || state.themes[0];
   applyTheme(active);
 

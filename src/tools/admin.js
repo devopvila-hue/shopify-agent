@@ -14,12 +14,14 @@ import { THEMES } from '../themes.js';
 
 const IMAGE_SCHEMA = {
   type: 'array',
-  description: 'Product images, in display order.',
+  maxItems: 5,
+  description: 'Product images, in display order. Up to five. The one marked as default is the one the shop shows.',
   items: {
     type: 'object',
     properties: {
       url: { type: 'string', minLength: 1, description: 'Image URL. Must be http(s) or a path under /uploads/.' },
       alt: { type: 'string', description: 'Alternative text, used by screen readers.' },
+      isDefault: { type: 'boolean', description: 'True for the image the storefront shows. The first one is used if none is marked.' },
     },
     required: ['url'],
     additionalProperties: false,

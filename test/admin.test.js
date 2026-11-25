@@ -191,3 +191,37 @@ test('the shop settings keep the design template', async (t) => {
   const settings = (await h.call('update_settings', { defaultTheme: 'brasa' })).settings;
   assert.equal(settings.defaultTheme, 'brasa');
 });
+
+test('a product takes up to five images and one of them is the default', async (t) => {
+  const h = harness();
+  t.after(h.cleanup);
+
+  const urls = ['/uploads/a.png', '/uploads/b.png', '/uploads/c.png'];
+  const saved = await h.call('set_product_images', {
+    productId: 'gid://shopify/Product/1001',
+    images: [
+      { url: urls[0], alt: 'General' },
+      { url: urls[1], alt: 'Detalle', isDefault: true },
+      { url: urls[2] },
+    ],
+  });
+  assert.equal(saved.product.images.length, 3);
+  assert.equal(saved.product.images[1].isDefault, true);
+  assert.equal(saved.product.images[0].isDefault, false);
+
+  const back = await h.call('get_product', { productId: 'gid://shopify/Product/1001' });
+  assert.equal(back.product.images[1].isDefault, true);
+});
+
+test('a sixth image is refused', async (t) => {
+  const h = harness();
+  t.after(h.cleanup);
+  await assert.rejects(
+    () =>
+      h.call('set_product_images', {
+        productId: 'gid://shopify/Product/1001',
+        images: Array.from({ length: 6 }, (_, i) => ({ url: `/uploads/${i}.png` })),
+      }),
+    /at most 5 items/,
+  );
+});

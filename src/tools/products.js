@@ -171,12 +171,14 @@ export const productTools = [
         },
         images: {
           type: 'array',
-          description: 'Product images, in display order.',
+          maxItems: 5,
+          description: 'Product images, in display order. Up to five. The default one is what the shop shows.',
           items: {
             type: 'object',
             properties: {
               url: { type: 'string', minLength: 1 },
               alt: { type: 'string' },
+              isDefault: { type: 'boolean' },
             },
             required: ['url'],
             additionalProperties: false,
@@ -226,12 +228,14 @@ export const productTools = [
         },
         images: {
           type: 'array',
-          description: 'Replace the product images, in display order.',
+          maxItems: 5,
+          description: 'Replace the product images, in display order. Up to five. The default one is what the shop shows.',
           items: {
             type: 'object',
             properties: {
               url: { type: 'string', minLength: 1 },
               alt: { type: 'string' },
+              isDefault: { type: 'boolean' },
             },
             required: ['url'],
             additionalProperties: false,
