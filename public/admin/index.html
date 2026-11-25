@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin · AURORA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/admin/admin.css" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23141310'/%3E%3Ctext x='16' y='22' font-family='Helvetica' font-size='15' font-weight='700' text-anchor='middle' fill='%23cde94f'%3EA%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+
+<aside class="side">
+  <div class="brand">AURORA <span>admin</span></div>
+  <nav id="nav"></nav>
+  <div class="side-foot">
+    <a href="/" target="_blank" data-i18n="nav.shop">Ver la tienda</a>
+    <a href="/tools.html" target="_blank" data-i18n="nav.tools">API de tools</a>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="bar">
+    <h1 id="sectionTitle">Panel</h1>
+    <div class="spacer"></div>
+    <span class="pill" id="storePill">…</span>
+    <select class="pill lang" id="langSelect" aria-label="Language"></select>
+  </header>
+  <div class="content" id="content">
+    <p class="muted" data-i18n="common.loading">Cargando…</p>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="panel" id="panel" aria-hidden="true">
+  <header class="panel-head">
+    <h2 id="panelTitle"></h2>
+    <button class="x" id="panelClose" aria-label="Cerrar">×</button>
+  </header>
+  <div class="panel-body" id="panelBody"></div>
+  <footer class="panel-foot" id="panelFoot"></footer>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<!--SHOP_CONFIG-->
+<script src="/admin/admin.js"></script></body>
+</html>

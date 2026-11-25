@@ -11,6 +11,7 @@ import { inventoryTools } from './inventory.js';
 import { orderTools } from './orders.js';
 import { customerTools } from './customers.js';
 import { storeTools } from './store.js';
+import { adminTools } from './admin.js';
 
 export const allTools = [
   ...storeTools,
@@ -18,6 +19,7 @@ export const allTools = [
   ...inventoryTools,
   ...orderTools,
   ...customerTools,
+  ...adminTools,
 ];
 
 export function createRegistry() {

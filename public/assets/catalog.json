@@ -1,0 +1,1449 @@
+{
+  "generatedAt": "2026-11-25T21:44:43.461Z",
+  "currency": "EUR",
+  "shop": {
+    "name": "AURORA",
+    "tagline": "Nordic goods for everyday use",
+    "domain": "demo.myshopify.com"
+  },
+  "settings": {
+    "currency": "EUR",
+    "taxCountry": "ES",
+    "vatRate": 21,
+    "pricesIncludeTax": true,
+    "freeShippingThreshold": 50,
+    "shippingFlatRate": 4.9,
+    "defaultLocale": "en"
+  },
+  "categories": [
+    {
+      "id": "cat_84fd0304",
+      "name": "Apparel",
+      "slug": "apparel"
+    },
+    {
+      "id": "cat_1f73df44",
+      "name": "Bags",
+      "slug": "bags"
+    },
+    {
+      "id": "cat_a511815a",
+      "name": "Home",
+      "slug": "home"
+    },
+    {
+      "id": "cat_05aeb788",
+      "name": "Paper",
+      "slug": "paper"
+    }
+  ],
+  "theme": {
+    "id": "aurora",
+    "name": "AURORA"
+  },
+  "themes": [
+    {
+      "id": "aurora",
+      "name": "Aurora",
+      "industry": "Apparel",
+      "palette": {
+        "paper": "#faf8f4",
+        "surface": "#ffffff",
+        "ink": "#14120e",
+        "ink2": "#3d382f",
+        "muted": "#7d7668",
+        "line": "#e6e1d6",
+        "accent": "#1f6b3a",
+        "highlight": "#cde94f",
+        "artA": "#ece5d6",
+        "artB": "#cdd9c4"
+      },
+      "layout": {
+        "hero": "split",
+        "card": "border",
+        "button": "pill",
+        "radius": 14,
+        "density": "normal",
+        "caps": true
+      },
+      "fonts": {
+        "display": "\"Space Grotesk\", -apple-system, sans-serif",
+        "body": "Inter, -apple-system, sans-serif",
+        "mono": "\"IBM Plex Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "editorial",
+      "name": "Revista",
+      "industry": "Moda",
+      "palette": {
+        "paper": "#ffffff",
+        "surface": "#ffffff",
+        "ink": "#111111",
+        "ink2": "#3a3a3a",
+        "muted": "#767676",
+        "line": "#111111",
+        "accent": "#b4232f",
+        "highlight": "#f0d9c0",
+        "artA": "#f0d9c0",
+        "artB": "#e4c7ae"
+      },
+      "layout": {
+        "hero": "centered",
+        "card": "plain",
+        "button": "square",
+        "radius": 0,
+        "density": "airy",
+        "caps": true
+      },
+      "fonts": {
+        "display": "\"Playfair Display\", Georgia, serif",
+        "body": "Inter, -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "atelier",
+      "name": "Taller",
+      "industry": "Cerámica",
+      "palette": {
+        "paper": "#f4efe7",
+        "surface": "#fffdf9",
+        "ink": "#2b241d",
+        "ink2": "#544a3f",
+        "muted": "#8b8071",
+        "line": "#ded2c0",
+        "accent": "#a4552b",
+        "highlight": "#e2c9a8",
+        "artA": "#e7d3bb",
+        "artB": "#d3b492"
+      },
+      "layout": {
+        "hero": "split",
+        "card": "shadow",
+        "button": "soft",
+        "radius": 4,
+        "density": "normal",
+        "caps": false
+      },
+      "fonts": {
+        "body": "\"Work Sans\", -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "botanica",
+      "name": "Botánica",
+      "industry": "Plantas",
+      "palette": {
+        "paper": "#f2f6f1",
+        "surface": "#ffffff",
+        "ink": "#14231a",
+        "ink2": "#33473a",
+        "muted": "#71857a",
+        "line": "#d7e3d8",
+        "accent": "#2f6b45",
+        "highlight": "#d8e8c8",
+        "artA": "#dbe9d5",
+        "artB": "#b6d1b3"
+      },
+      "layout": {
+        "hero": "split",
+        "card": "solid",
+        "button": "pill",
+        "radius": 20,
+        "density": "airy",
+        "caps": false
+      },
+      "fonts": {
+        "display": "Fraunces, Georgia, serif",
+        "body": "Karla, -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "carbon",
+      "name": "Carbono",
+      "industry": "Deportes",
+      "palette": {
+        "paper": "#101214",
+        "surface": "#191c1f",
+        "ink": "#f4f6f8",
+        "ink2": "#c7cdd3",
+        "muted": "#8b949c",
+        "line": "#2a2f34",
+        "accent": "#c8f24d",
+        "highlight": "#c8f24d",
+        "artA": "#2b3136",
+        "artB": "#1c2124"
+      },
+      "layout": {
+        "hero": "centered",
+        "card": "border",
+        "button": "square",
+        "radius": 6,
+        "density": "tight",
+        "caps": true
+      },
+      "fonts": {
+        "display": "\"Archivo Black\", Impact, sans-serif",
+        "body": "Inter, -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "circuit",
+      "name": "Circuito",
+      "industry": "Electrónica",
+      "palette": {
+        "paper": "#0b1020",
+        "surface": "#131a2e",
+        "ink": "#e8ecff",
+        "ink2": "#b9c2e0",
+        "muted": "#7b87ab",
+        "line": "#222c4a",
+        "accent": "#4d7cff",
+        "highlight": "#7ef0d0",
+        "artA": "#1b2540",
+        "artB": "#101830"
+      },
+      "layout": {
+        "hero": "split",
+        "card": "border",
+        "button": "square",
+        "radius": 4,
+        "density": "tight",
+        "caps": true
+      },
+      "fonts": {
+        "display": "\"Space Grotesk\", -apple-system, sans-serif",
+        "body": "Inter, -apple-system, sans-serif",
+        "mono": "\"IBM Plex Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "glow",
+      "name": "Radiante",
+      "industry": "Belleza",
+      "palette": {
+        "paper": "#fbf3f5",
+        "surface": "#ffffff",
+        "ink": "#2a1b21",
+        "ink2": "#5a4149",
+        "muted": "#967d85",
+        "line": "#f0dbe2",
+        "accent": "#c2557a",
+        "highlight": "#f7d9e2",
+        "artA": "#f9dbe5",
+        "artB": "#f0bcd0"
+      },
+      "layout": {
+        "hero": "centered",
+        "card": "plain",
+        "button": "pill",
+        "radius": 24,
+        "density": "airy",
+        "caps": false
+      },
+      "fonts": {
+        "display": "\"Playfair Display\", Georgia, serif",
+        "body": "Manrope, -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "aureum",
+      "name": "Latón",
+      "industry": "Joyería",
+      "palette": {
+        "paper": "#f7f4ec",
+        "surface": "#fffdf7",
+        "ink": "#221f18",
+        "ink2": "#4b463a",
+        "muted": "#8b8474",
+        "line": "#e5ddc9",
+        "accent": "#96762f",
+        "highlight": "#e8d9ae",
+        "artA": "#eee3c6",
+        "artB": "#d9c69a"
+      },
+      "layout": {
+        "hero": "split",
+        "card": "plain",
+        "button": "soft",
+        "radius": 2,
+        "density": "airy",
+        "caps": true
+      },
+      "fonts": {
+        "display": "Fraunces, Georgia, serif",
+        "body": "Karla, -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "pan",
+      "name": "Horno",
+      "industry": "Panadería",
+      "palette": {
+        "paper": "#fdf6ea",
+        "surface": "#fffdf8",
+        "ink": "#3a2a1c",
+        "ink2": "#634d38",
+        "muted": "#9a8269",
+        "line": "#eddfc9",
+        "accent": "#b5652b",
+        "highlight": "#f2d9a8",
+        "artA": "#f5e2c6",
+        "artB": "#e6c79c"
+      },
+      "layout": {
+        "hero": "split",
+        "card": "shadow",
+        "button": "pill",
+        "radius": 12,
+        "density": "normal",
+        "caps": false
+      },
+      "fonts": {
+        "display": "Fraunces, Georgia, serif",
+        "body": "Lora, Georgia, serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "cafe",
+      "name": "Especialidad",
+      "industry": "Café",
+      "palette": {
+        "paper": "#2a201a",
+        "surface": "#352921",
+        "ink": "#f0e6d8",
+        "ink2": "#cdbda6",
+        "muted": "#9b8a76",
+        "line": "#4a3a2e",
+        "accent": "#d8a05a",
+        "highlight": "#6f4a2c",
+        "artA": "#4a3728",
+        "artB": "#2f231b"
+      },
+      "layout": {
+        "hero": "centered",
+        "card": "border",
+        "button": "soft",
+        "radius": 6,
+        "density": "normal",
+        "caps": true
+      },
+      "fonts": {
+        "display": "\"Playfair Display\", Georgia, serif",
+        "body": "\"Work Sans\", -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "vinilo",
+      "name": "Viña",
+      "industry": "Vino",
+      "palette": {
+        "paper": "#f6f0ee",
+        "surface": "#ffffff",
+        "ink": "#2a1c22",
+        "ink2": "#573e46",
+        "muted": "#93787f",
+        "line": "#e7d8dc",
+        "accent": "#7a1f3d",
+        "highlight": "#d9b6c2",
+        "artA": "#e6cdd4",
+        "artB": "#d3a9b6"
+      },
+      "layout": {
+        "hero": "split",
+        "card": "plain",
+        "button": "soft",
+        "radius": 2,
+        "density": "airy",
+        "caps": true
+      },
+      "fonts": {
+        "display": "\"Playfair Display\", Georgia, serif",
+        "body": "Lora, Georgia, serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "brasa",
+      "name": "Brasa",
+      "industry": "Cerveza",
+      "palette": {
+        "paper": "#1e1a16",
+        "surface": "#282219",
+        "ink": "#f5ead9",
+        "ink2": "#c9b69c",
+        "muted": "#95836c",
+        "line": "#3d3428",
+        "accent": "#e8a33d",
+        "highlight": "#b8452f",
+        "artA": "#3a2f22",
+        "artB": "#221c15"
+      },
+      "layout": {
+        "hero": "centered",
+        "card": "border",
+        "button": "square",
+        "radius": 4,
+        "density": "tight",
+        "caps": true
+      },
+      "fonts": {
+        "display": "\"Bebas Neue\", Impact, sans-serif",
+        "body": "\"Work Sans\", -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "cosecha",
+      "name": "Cosecha",
+      "industry": "Orgánica",
+      "palette": {
+        "paper": "#f4f1e6",
+        "surface": "#fffef8",
+        "ink": "#26301f",
+        "ink2": "#4b5740",
+        "muted": "#859070",
+        "line": "#dfe3cf",
+        "accent": "#5c7d3a",
+        "highlight": "#dde8c4",
+        "artA": "#e3e8cd",
+        "artB": "#c7d6ab"
+      },
+      "layout": {
+        "hero": "split",
+        "card": "plain",
+        "button": "pill",
+        "radius": 16,
+        "density": "airy",
+        "caps": false
+      },
+      "fonts": {
+        "body": "Karla, -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "ferreteria",
+      "name": "Herramienta",
+      "industry": "Bricolaje",
+      "palette": {
+        "paper": "#f5f5f3",
+        "surface": "#ffffff",
+        "ink": "#1c1c1c",
+        "ink2": "#3d3d3d",
+        "muted": "#767676",
+        "line": "#d5d5d0",
+        "accent": "#d1481f",
+        "highlight": "#ffd400",
+        "artA": "#e6e6e2",
+        "artB": "#d0d0ca"
+      },
+      "layout": {
+        "hero": "split",
+        "card": "border",
+        "button": "square",
+        "radius": 0,
+        "density": "tight",
+        "caps": true
+      },
+      "fonts": {
+        "display": "\"Archivo Black\", Impact, sans-serif",
+        "body": "\"Work Sans\", -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "trail",
+      "name": "Sendero",
+      "industry": "Outdoor",
+      "palette": {
+        "paper": "#eef1ec",
+        "surface": "#ffffff",
+        "ink": "#1f2a22",
+        "ink2": "#3d4b40",
+        "muted": "#77857a",
+        "line": "#d7ded5",
+        "accent": "#3d6b45",
+        "highlight": "#e0a63c",
+        "artA": "#d8e2d3",
+        "artB": "#b3c4ae"
+      },
+      "layout": {
+        "hero": "split",
+        "card": "shadow",
+        "button": "soft",
+        "radius": 8,
+        "density": "normal",
+        "caps": true
+      },
+      "fonts": {
+        "display": "Outfit, -apple-system, sans-serif",
+        "body": "Inter, -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "velo",
+      "name": "Qu pedal",
+      "industry": "Ciclismo",
+      "palette": {
+        "paper": "#f4f5f7",
+        "surface": "#ffffff",
+        "ink": "#14171c",
+        "ink2": "#363b44",
+        "muted": "#7c828c",
+        "line": "#dfe2e7",
+        "accent": "#ff4d2e",
+        "highlight": "#14171c",
+        "artA": "#e3e6ea",
+        "artB": "#cfd4da"
+      },
+      "layout": {
+        "hero": "centered",
+        "card": "plain",
+        "button": "square",
+        "radius": 6,
+        "density": "tight",
+        "caps": true
+      },
+      "fonts": {
+        "display": "\"Archivo Black\", Impact, sans-serif",
+        "body": "Inter, -apple-system, sans-serif",
+        "mono": "\"IBM Plex Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "mascota",
+      "name": "Collar",
+      "industry": "Mascotas",
+      "palette": {
+        "paper": "#fff6ec",
+        "surface": "#ffffff",
+        "ink": "#33261c",
+        "ink2": "#63493a",
+        "muted": "#9c8574",
+        "line": "#f0dfcd",
+        "accent": "#e0703a",
+        "highlight": "#ffd9b8",
+        "artA": "#ffe3c7",
+        "artB": "#f7c8a3"
+      },
+      "layout": {
+        "hero": "split",
+        "card": "solid",
+        "button": "pill",
+        "radius": 20,
+        "density": "normal",
+        "caps": false
+      },
+      "fonts": {
+        "display": "Outfit, -apple-system, sans-serif",
+        "body": "Manrope, -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "peque",
+      "name": "Patitos",
+      "industry": "Infantil",
+      "palette": {
+        "paper": "#fffaf0",
+        "surface": "#ffffff",
+        "ink": "#2f3b52",
+        "ink2": "#55627a",
+        "muted": "#8c97ab",
+        "line": "#eee4d0",
+        "accent": "#f2a33c",
+        "highlight": "#a8d8ef",
+        "artA": "#ffeccb",
+        "artB": "#cde9f7"
+      },
+      "layout": {
+        "hero": "centered",
+        "card": "solid",
+        "button": "pill",
+        "radius": 18,
+        "density": "airy",
+        "caps": false
+      },
+      "fonts": {
+        "display": "Outfit, -apple-system, sans-serif",
+        "body": "Manrope, -apple-system, sans-serif",
+        "mono": "\"IBM Plex Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "juguete",
+      "name": "Juguete",
+      "industry": "Juguetes",
+      "palette": {
+        "paper": "#fdf6ff",
+        "surface": "#ffffff",
+        "ink": "#2b2140",
+        "ink2": "#554767",
+        "muted": "#8d84a3",
+        "line": "#e9def5",
+        "accent": "#7b4bd8",
+        "highlight": "#ffd44d",
+        "artA": "#eadffd",
+        "artB": "#d4c2f7"
+      },
+      "layout": {
+        "hero": "centered",
+        "card": "border",
+        "button": "pill",
+        "radius": 16,
+        "density": "normal",
+        "caps": true
+      },
+      "fonts": {
+        "display": "Outfit, -apple-system, sans-serif",
+        "body": "Karla, -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "papel",
+      "name": "Cuaderno",
+      "industry": "Papelería",
+      "palette": {
+        "paper": "#fbfaf6",
+        "surface": "#ffffff",
+        "ink": "#1d1d1b",
+        "ink2": "#43433f",
+        "muted": "#82827c",
+        "line": "#e7e4db",
+        "accent": "#2f5d50",
+        "highlight": "#e5dfcd",
+        "artA": "#eee9dc",
+        "artB": "#dcd5c2"
+      },
+      "layout": {
+        "hero": "split",
+        "card": "plain",
+        "button": "square",
+        "radius": 4,
+        "density": "normal",
+        "caps": false
+      },
+      "fonts": {
+        "body": "Karla, -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "plata",
+      "name": "Lumen",
+      "industry": "Fotografía",
+      "palette": {
+        "paper": "#101013",
+        "surface": "#17171b",
+        "ink": "#ededf0",
+        "ink2": "#b8b8c0",
+        "muted": "#82828c",
+        "line": "#2a2a30",
+        "accent": "#b0b0b8",
+        "highlight": "#5a5a63",
+        "artA": "#2a2a30",
+        "artB": "#191920"
+      },
+      "layout": {
+        "hero": "centered",
+        "card": "plain",
+        "button": "square",
+        "radius": 0,
+        "density": "airy",
+        "caps": true
+      },
+      "fonts": {
+        "display": "\"Space Grotesk\", -apple-system, sans-serif",
+        "body": "Inter, -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "lienzo",
+      "name": "Escenario",
+      "industry": "Música",
+      "palette": {
+        "paper": "#1a1420",
+        "surface": "#241b2c",
+        "ink": "#f2ecf7",
+        "ink2": "#c3b6cd",
+        "muted": "#8d7f98",
+        "line": "#332742",
+        "accent": "#d64d8a",
+        "highlight": "#6f4bd8",
+        "artA": "#312043",
+        "artB": "#1f1730"
+      },
+      "layout": {
+        "hero": "centered",
+        "card": "border",
+        "button": "square",
+        "radius": 4,
+        "density": "tight",
+        "caps": true
+      },
+      "fonts": {
+        "display": "\"Bebas Neue\", Impact, sans-serif",
+        "body": "\"Work Sans\", -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "garaje",
+      "name": "Garaje",
+      "industry": "Motor",
+      "palette": {
+        "paper": "#e9e9e7",
+        "surface": "#ffffff",
+        "ink": "#17181a",
+        "ink2": "#3a3c3f",
+        "muted": "#787b80",
+        "line": "#cfd0cd",
+        "accent": "#c4122f",
+        "highlight": "#17181a",
+        "artA": "#dededb",
+        "artB": "#c6c7c4"
+      },
+      "layout": {
+        "hero": "split",
+        "card": "border",
+        "button": "square",
+        "radius": 0,
+        "density": "tight",
+        "caps": true
+      },
+      "fonts": {
+        "display": "\"Archivo Black\", Impact, sans-serif",
+        "body": "Inter, -apple-system, sans-serif",
+        "mono": "\"IBM Plex Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "jardin",
+      "name": "Semilla",
+      "industry": "Jardín",
+      "palette": {
+        "paper": "#f1f5ec",
+        "surface": "#ffffff",
+        "ink": "#1f2c1c",
+        "ink2": "#3f5240",
+        "muted": "#75856f",
+        "line": "#d8e2d1",
+        "accent": "#4a7c3a",
+        "highlight": "#d4e3c2",
+        "artA": "#dce8d2",
+        "artB": "#bcd0ae"
+      },
+      "layout": {
+        "hero": "split",
+        "card": "plain",
+        "button": "pill",
+        "radius": 14,
+        "density": "airy",
+        "caps": false
+      },
+      "fonts": {
+        "display": "Fraunces, Georgia, serif",
+        "body": "Lora, Georgia, serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "oasis",
+      "name": "Horizonte",
+      "industry": "Viajes",
+      "palette": {
+        "paper": "#eaf4f7",
+        "surface": "#ffffff",
+        "ink": "#14303a",
+        "ink2": "#32535f",
+        "muted": "#6e8b95",
+        "line": "#cfe2e8",
+        "accent": "#0e7f96",
+        "highlight": "#ffd166",
+        "artA": "#cfe6ec",
+        "artB": "#a7d0da"
+      },
+      "layout": {
+        "hero": "centered",
+        "card": "shadow",
+        "button": "pill",
+        "radius": 22,
+        "density": "airy",
+        "caps": false
+      },
+      "fonts": {
+        "display": "\"Playfair Display\", Georgia, serif",
+        "body": "Manrope, -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "serum",
+      "name": "Ritual",
+      "industry": "Skincare",
+      "palette": {
+        "paper": "#f8f5f2",
+        "surface": "#ffffff",
+        "ink": "#2a2724",
+        "ink2": "#55504a",
+        "muted": "#8e8880",
+        "line": "#e9e2da",
+        "accent": "#b08568",
+        "highlight": "#e8d9cc",
+        "artA": "#eee0d5",
+        "artB": "#dcc7b6"
+      },
+      "layout": {
+        "hero": "split",
+        "card": "plain",
+        "button": "pill",
+        "radius": 20,
+        "density": "airy",
+        "caps": false
+      },
+      "fonts": {
+        "display": "Fraunces, Georgia, serif",
+        "body": "Karla, -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "reloj",
+      "name": "Esfera",
+      "industry": "Relojes",
+      "palette": {
+        "paper": "#f4f4f4",
+        "surface": "#ffffff",
+        "ink": "#101010",
+        "ink2": "#3a3a3a",
+        "muted": "#7b7b7b",
+        "line": "#dcdcdc",
+        "accent": "#1c1c1c",
+        "highlight": "#c9a227",
+        "artA": "#e6e6e6",
+        "artB": "#cfcfcf"
+      },
+      "layout": {
+        "hero": "split",
+        "card": "plain",
+        "button": "soft",
+        "radius": 2,
+        "density": "airy",
+        "caps": true
+      },
+      "fonts": {
+        "display": "\"Playfair Display\", Georgia, serif",
+        "body": "\"Work Sans\", -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "zapatilla",
+      "name": "Suela",
+      "industry": "Zapatillas",
+      "palette": {
+        "paper": "#fbfbfb",
+        "surface": "#ffffff",
+        "ink": "#0f0f10",
+        "ink2": "#333336",
+        "muted": "#7b7b80",
+        "line": "#e3e3e3",
+        "accent": "#ff3b30",
+        "highlight": "#111113",
+        "artA": "#ebebec",
+        "artB": "#d6d6d8"
+      },
+      "layout": {
+        "hero": "centered",
+        "card": "border",
+        "button": "square",
+        "radius": 10,
+        "density": "tight",
+        "caps": true
+      },
+      "fonts": {
+        "display": "\"Archivo Black\", Impact, sans-serif",
+        "body": "Outfit, -apple-system, sans-serif",
+        "mono": "\"IBM Plex Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "miel",
+      "name": "Panal",
+      "industry": "Miel",
+      "palette": {
+        "paper": "#fff8e8",
+        "surface": "#fffdf6",
+        "ink": "#3b2a12",
+        "ink2": "#6a5230",
+        "muted": "#a08a63",
+        "line": "#f0e3c4",
+        "accent": "#c98a12",
+        "highlight": "#f6d98a",
+        "artA": "#f7e5b4",
+        "artB": "#e6cf8e"
+      },
+      "layout": {
+        "hero": "split",
+        "card": "solid",
+        "button": "pill",
+        "radius": 14,
+        "density": "normal",
+        "caps": false
+      },
+      "fonts": {
+        "display": "Fraunces, Georgia, serif",
+        "body": "Lora, Georgia, serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    },
+    {
+      "id": "bosque",
+      "name": "Bosque",
+      "industry": "Senderismo",
+      "palette": {
+        "paper": "#e8efe6",
+        "surface": "#ffffff",
+        "ink": "#16231a",
+        "ink2": "#35473a",
+        "muted": "#6f8073",
+        "line": "#d0dccb",
+        "accent": "#2f5d3a",
+        "highlight": "#a7c9a0",
+        "artA": "#d6e3d0",
+        "artB": "#b0c8a8"
+      },
+      "layout": {
+        "hero": "split",
+        "card": "shadow",
+        "button": "soft",
+        "radius": 10,
+        "density": "normal",
+        "caps": true
+      },
+      "fonts": {
+        "display": "Outfit, -apple-system, sans-serif",
+        "body": "Karla, -apple-system, sans-serif",
+        "mono": "\"Space Mono\", ui-monospace, monospace"
+      }
+    }
+  ],
+  "products": [
+    {
+      "id": "gid://shopify/Product/1001",
+      "title": "Aurora Merino Sweater",
+      "handle": "aurora-merino-sweater",
+      "description": "Soft merino wool sweater.",
+      "descriptionHtml": "<p>Soft merino wool sweater.</p>",
+      "category": {
+        "id": "cat_84fd0304",
+        "name": "Apparel",
+        "slug": "apparel"
+      },
+      "productType": "Apparel",
+      "vendor": "Northwind",
+      "tags": [
+        "new",
+        "wool"
+      ],
+      "status": "ACTIVE",
+      "images": [],
+      "taxRate": 21,
+      "price": "89.00",
+      "compareAtPrice": null,
+      "totalInventory": 19,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/2001",
+          "title": "S",
+          "price": "89.00",
+          "compareAtPrice": null,
+          "sku": "AUR-S",
+          "available": 12,
+          "option": "Size",
+          "optionValue": "S"
+        },
+        {
+          "id": "gid://shopify/ProductVariant/2002",
+          "title": "M",
+          "price": "89.00",
+          "compareAtPrice": null,
+          "sku": "AUR-M",
+          "available": 7,
+          "option": "Size",
+          "optionValue": "M"
+        },
+        {
+          "id": "gid://shopify/ProductVariant/2003",
+          "title": "L",
+          "price": "94.00",
+          "compareAtPrice": null,
+          "sku": "AUR-L",
+          "available": 0,
+          "option": "Size",
+          "optionValue": "L"
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/1002",
+      "title": "Ceramica Mug",
+      "handle": "ceramica-mug",
+      "description": "Hand thrown stoneware mug, 350 ml.",
+      "descriptionHtml": "<p>Hand thrown stoneware mug, 350 ml.</p>",
+      "category": {
+        "id": "cat_a511815a",
+        "name": "Home",
+        "slug": "home"
+      },
+      "productType": "Home",
+      "vendor": "Ceramica Studio",
+      "tags": [
+        "handmade"
+      ],
+      "status": "ACTIVE",
+      "images": [],
+      "taxRate": 21,
+      "price": "24.00",
+      "compareAtPrice": null,
+      "totalInventory": 43,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/2004",
+          "title": "Default Title",
+          "price": "24.00",
+          "compareAtPrice": null,
+          "sku": "CER-01",
+          "available": 43,
+          "option": "Title",
+          "optionValue": "Default Title"
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/1003",
+      "title": "Alpine Daypack 22L",
+      "handle": "alpine-daypack-22l",
+      "description": "Twenty two litre day pack.",
+      "descriptionHtml": "<p>Twenty two litre day pack.</p>",
+      "category": {
+        "id": "cat_1f73df44",
+        "name": "Bags",
+        "slug": "bags"
+      },
+      "productType": "Bags",
+      "vendor": "Northwind",
+      "tags": [],
+      "status": "DRAFT",
+      "images": [],
+      "taxRate": 21,
+      "price": "145.00",
+      "compareAtPrice": "175.00",
+      "totalInventory": 4,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/2005",
+          "title": "Default Title",
+          "price": "145.00",
+          "compareAtPrice": "175.00",
+          "sku": "ALP-22",
+          "available": 4,
+          "option": "Title",
+          "optionValue": "Default Title"
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/1100",
+      "title": "Fjord Down Vest",
+      "handle": "fjord-down-vest",
+      "description": "Relleno reciclado, corte técnico, capucha desmontable.",
+      "descriptionHtml": "<p>Relleno reciclado, corte técnico, capucha desmontable.</p>",
+      "category": {
+        "id": "cat_84fd0304",
+        "name": "Apparel",
+        "slug": "apparel"
+      },
+      "productType": "Apparel",
+      "vendor": "Northwind",
+      "tags": [
+        "apparel"
+      ],
+      "status": "ACTIVE",
+      "images": [],
+      "taxRate": 21,
+      "price": "145.00",
+      "compareAtPrice": null,
+      "totalInventory": 19,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/2201",
+          "title": "S",
+          "price": "145.00",
+          "compareAtPrice": null,
+          "sku": "FJO-S",
+          "available": 6,
+          "option": "Title",
+          "optionValue": "S"
+        },
+        {
+          "id": "gid://shopify/ProductVariant/2202",
+          "title": "M",
+          "price": "145.00",
+          "compareAtPrice": null,
+          "sku": "FJO-M",
+          "available": 9,
+          "option": "Title",
+          "optionValue": "M"
+        },
+        {
+          "id": "gid://shopify/ProductVariant/2203",
+          "title": "L",
+          "price": "145.00",
+          "compareAtPrice": null,
+          "sku": "FJO-L",
+          "available": 4,
+          "option": "Title",
+          "optionValue": "L"
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/1101",
+      "title": "Tind Wool Scarf",
+      "handle": "tind-wool-scarf",
+      "description": "Lana merino de Thickness, 180 × 30 cm.",
+      "descriptionHtml": "<p>Lana merino de Thickness, 180 × 30 cm.</p>",
+      "category": {
+        "id": "cat_84fd0304",
+        "name": "Apparel",
+        "slug": "apparel"
+      },
+      "productType": "Apparel",
+      "vendor": "Northwind",
+      "tags": [
+        "apparel"
+      ],
+      "status": "ACTIVE",
+      "images": [],
+      "taxRate": 21,
+      "price": "39.00",
+      "compareAtPrice": null,
+      "totalInventory": 25,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/2204",
+          "title": "One size",
+          "price": "39.00",
+          "compareAtPrice": null,
+          "sku": "TIN-ONES",
+          "available": 25,
+          "option": "Title",
+          "optionValue": "One size"
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/1102",
+      "title": "Coast Merino Beanie",
+      "handle": "coast-merino-beanie",
+      "description": "Punto fino, doble vuelta, instructions de lavado tejidas.",
+      "descriptionHtml": "<p>Punto fino, doble vuelta, instructions de lavado tejidas.</p>",
+      "category": {
+        "id": "cat_84fd0304",
+        "name": "Apparel",
+        "slug": "apparel"
+      },
+      "productType": "Apparel",
+      "vendor": "Northwind",
+      "tags": [
+        "apparel"
+      ],
+      "status": "ACTIVE",
+      "images": [],
+      "taxRate": 21,
+      "price": "29.00",
+      "compareAtPrice": null,
+      "totalInventory": 40,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/2205",
+          "title": "One size",
+          "price": "29.00",
+          "compareAtPrice": null,
+          "sku": "COA-ONES",
+          "available": 40,
+          "option": "Title",
+          "optionValue": "One size"
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/1103",
+      "title": "Ceramica Bowl Set",
+      "handle": "ceramica-bowl-set",
+      "description": "Tres bol es torneados y esmaltados a mano.",
+      "descriptionHtml": "<p>Tres bol es torneados y esmaltados a mano.</p>",
+      "category": {
+        "id": "cat_a511815a",
+        "name": "Home",
+        "slug": "home"
+      },
+      "productType": "Home",
+      "vendor": "Ceramica Studio",
+      "tags": [
+        "home"
+      ],
+      "status": "ACTIVE",
+      "images": [],
+      "taxRate": 21,
+      "price": "58.00",
+      "compareAtPrice": null,
+      "totalInventory": 18,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/2206",
+          "title": "Set of 3",
+          "price": "58.00",
+          "compareAtPrice": null,
+          "sku": "CER-SETO",
+          "available": 18,
+          "option": "Title",
+          "optionValue": "Set of 3"
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/1104",
+      "title": "Linen Apron",
+      "handle": "linen-apron",
+      "description": "Lino grueso con correas de algodón.",
+      "descriptionHtml": "<p>Lino grueso con correas de algodón.</p>",
+      "category": {
+        "id": "cat_a511815a",
+        "name": "Home",
+        "slug": "home"
+      },
+      "productType": "Home",
+      "vendor": "Ceramica Studio",
+      "tags": [
+        "home"
+      ],
+      "status": "ACTIVE",
+      "images": [],
+      "taxRate": 21,
+      "price": "42.00",
+      "compareAtPrice": null,
+      "totalInventory": 22,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/2207",
+          "title": "One size",
+          "price": "42.00",
+          "compareAtPrice": null,
+          "sku": "LIN-ONES",
+          "available": 22,
+          "option": "Title",
+          "optionValue": "One size"
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/1105",
+      "title": "Cedar Desk Tray",
+      "handle": "cedar-desk-tray",
+      "description": "Cedro macizo con rebaje para bolígrafo.",
+      "descriptionHtml": "<p>Cedro macizo con rebaje para bolígrafo.</p>",
+      "category": {
+        "id": "cat_a511815a",
+        "name": "Home",
+        "slug": "home"
+      },
+      "productType": "Home",
+      "vendor": "Atelier Nord",
+      "tags": [
+        "home"
+      ],
+      "status": "ACTIVE",
+      "images": [],
+      "taxRate": 21,
+      "price": "62.00",
+      "compareAtPrice": null,
+      "totalInventory": 11,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/2208",
+          "title": "One size",
+          "price": "62.00",
+          "compareAtPrice": null,
+          "sku": "CED-ONES",
+          "available": 11,
+          "option": "Title",
+          "optionValue": "One size"
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/1106",
+      "title": "Solstice Candle",
+      "handle": "solstice-candle",
+      "description": "Cera de soja, 55 horas de burning, notes de hinojo.",
+      "descriptionHtml": "<p>Cera de soja, 55 horas de burning, notes de hinojo.</p>",
+      "category": {
+        "id": "cat_a511815a",
+        "name": "Home",
+        "slug": "home"
+      },
+      "productType": "Home",
+      "vendor": "Atelier Nord",
+      "tags": [
+        "home"
+      ],
+      "status": "ACTIVE",
+      "images": [],
+      "taxRate": 21,
+      "price": "28.00",
+      "compareAtPrice": null,
+      "totalInventory": 30,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/2209",
+          "title": "350 g",
+          "price": "28.00",
+          "compareAtPrice": null,
+          "sku": "SOL-350G",
+          "available": 30,
+          "option": "Title",
+          "optionValue": "350 g"
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/1107",
+      "title": "Trek Wallet",
+      "handle": "trek-wallet",
+      "description": "Cuero curtido con costura reforzada.",
+      "descriptionHtml": "<p>Cuero curtido con costura reforzada.</p>",
+      "category": {
+        "id": "cat_1f73df44",
+        "name": "Bags",
+        "slug": "bags"
+      },
+      "productType": "Bags",
+      "vendor": "Northwind",
+      "tags": [
+        "bags"
+      ],
+      "status": "ACTIVE",
+      "images": [],
+      "taxRate": 21,
+      "price": "35.00",
+      "compareAtPrice": null,
+      "totalInventory": 52,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/2210",
+          "title": "One size",
+          "price": "35.00",
+          "compareAtPrice": null,
+          "sku": "TRE-ONES",
+          "available": 52,
+          "option": "Title",
+          "optionValue": "One size"
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/1108",
+      "title": "Harbour Canvas Tote",
+      "handle": "harbour-canvas-tote",
+      "description": "Lona encerada, base reforzada, 38 × 42 cm.",
+      "descriptionHtml": "<p>Lona encerada, base reforzada, 38 × 42 cm.</p>",
+      "category": {
+        "id": "cat_1f73df44",
+        "name": "Bags",
+        "slug": "bags"
+      },
+      "productType": "Bags",
+      "vendor": "Northwind",
+      "tags": [
+        "bags"
+      ],
+      "status": "ACTIVE",
+      "images": [],
+      "taxRate": 21,
+      "price": "79.00",
+      "compareAtPrice": null,
+      "totalInventory": 22,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/2211",
+          "title": "Natural",
+          "price": "79.00",
+          "compareAtPrice": null,
+          "sku": "HAR-NATU",
+          "available": 14,
+          "option": "Title",
+          "optionValue": "Natural"
+        },
+        {
+          "id": "gid://shopify/ProductVariant/2212",
+          "title": "Negro",
+          "price": "79.00",
+          "compareAtPrice": null,
+          "sku": "HAR-NEGR",
+          "available": 8,
+          "option": "Title",
+          "optionValue": "Negro"
+        }
+      ]
+    },
+    {
+      "id": "gid://shopify/Product/1109",
+      "title": "Field Notebook Set",
+      "handle": "field-notebook-set",
+      "description": "Tres cuadernos de papel de algodón cosido.",
+      "descriptionHtml": "<p>Tres cuadernos de papel de algodón cosido.</p>",
+      "category": {
+        "id": "cat_05aeb788",
+        "name": "Paper",
+        "slug": "paper"
+      },
+      "productType": "Paper",
+      "vendor": "Atelier Nord",
+      "tags": [
+        "paper"
+      ],
+      "status": "ACTIVE",
+      "images": [],
+      "taxRate": 21,
+      "price": "19.00",
+      "compareAtPrice": null,
+      "totalInventory": 64,
+      "variants": [
+        {
+          "id": "gid://shopify/ProductVariant/2213",
+          "title": "Set of 3",
+          "price": "19.00",
+          "compareAtPrice": null,
+          "sku": "FIE-SETO",
+          "available": 64,
+          "option": "Title",
+          "optionValue": "Set of 3"
+        }
+      ]
+    }
+  ]
+}

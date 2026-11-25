@@ -3,367 +3,114 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>shopify-agent · catálogo de tools</title>
-<style>
-  :root {
-    --bg: #0d1117;
-    --panel: #151b23;
-    --panel-2: #1c232d;
-    --line: #2a323d;
-    --ink: #e6edf3;
-    --muted: #8b949e;
-    --accent: #9bd22b;
-    --accent-dim: #6f9c1e;
-    --read: #58a6ff;
-    --write: #d29922;
-    --danger: #f85149;
-    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  }
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    display: flex;
-    flex-direction: column;
-  }
-
-  header {
-    border-bottom: 1px solid var(--line);
-    background: linear-gradient(180deg, #161d26, #0d1117);
-    padding: 18px 24px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-  .logo { font-size: 18px; font-weight: 700; letter-spacing: -0.2px; }
-  .logo span { color: var(--accent); }
-  .badge {
-    font: 600 11px/1 var(--mono);
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    padding: 5px 9px;
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    color: var(--muted);
-    background: var(--panel);
-    white-space: nowrap;
-  }
-  .badge.mode { color: var(--bg); background: var(--accent); border-color: var(--accent); }
-  .badge.mode.live { background: var(--read); border-color: var(--read); color: #06121f; }
-  .spacer { flex: 1; }
-  .links { display: flex; gap: 8px; flex-wrap: wrap; }
-  .links a {
-    font: 12px/1 var(--mono);
-    color: var(--muted);
-    text-decoration: none;
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 6px 9px;
-    background: var(--panel);
-  }
-  .links a:hover { color: var(--ink); border-color: var(--accent-dim); }
-
-  main { flex: 1; display: grid; grid-template-columns: 290px 1fr; min-height: 0; }
-
-  nav {
-    border-right: 1px solid var(--line);
-    overflow-y: auto;
-    padding: 12px 0 40px;
-    background: #0b0f14;
-  }
-  nav h2 {
-    font: 600 10px/1 var(--mono);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #59636e;
-    margin: 18px 16px 7px;
-  }
-  nav a {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 7px 16px;
-    color: var(--ink);
-    text-decoration: none;
-    font-size: 13px;
-    border-left: 2px solid transparent;
-  }
-  nav a:hover { background: #121821; }
-  nav a.on { background: #16202c; border-left-color: var(--accent); }
-  .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
-  .dot.read { background: var(--read); }
-  .dot.write { background: var(--write); }
-  .dot.danger { background: var(--danger); }
-
-  section { overflow-y: auto; padding: 26px 32px 60px; }
-  .empty { color: var(--muted); max-width: 640px; }
-  .empty code { color: var(--accent); }
-
-  .tool-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
-  .tool-head h1 { font-size: 22px; margin: 0; font-family: var(--mono); letter-spacing: -0.4px; }
-  .tool-head .kind { font: 600 11px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.6px; }
-  .kind.read { color: var(--read); }
-  .kind.write { color: var(--write); }
-  .kind.danger { color: var(--danger); }
-  .desc { color: var(--muted); max-width: 76ch; margin: 8px 0 22px; }
-
-  h3 {
-    font: 600 10px/1 var(--mono);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #59636e;
-    margin: 26px 0 10px;
-    padding-bottom: 7px;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .form { display: grid; gap: 12px; max-width: 720px; }
-  .field { display: grid; grid-template-columns: 190px 1fr; gap: 12px; align-items: start; }
-  .field label { font: 12px/1.5 var(--mono); color: var(--ink); padding-top: 8px; }
-  .field label .req { color: var(--danger); }
-  .field label .hint { display: block; color: #59636e; font-size: 11px; margin-top: 3px; }
-  input, select, textarea {
-    width: 100%;
-    background: #0b0f14;
-    border: 1px solid var(--line);
-    color: var(--ink);
-    border-radius: 6px;
-    padding: 8px 10px;
-    font: 13px var(--mono);
-  }
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent-dim); }
-  textarea { min-height: 72px; resize: vertical; }
-  .check { display: flex; align-items: center; gap: 8px; padding-top: 8px; }
-  .check input { width: auto; }
-
-  button.run {
-    justify-self: start;
-    background: var(--accent);
-    color: #0d1117;
-    border: 0;
-    border-radius: 7px;
-    padding: 9px 18px;
-    font-weight: 700;
-    font-size: 13px;
-    cursor: pointer;
-    margin-top: 6px;
-  }
-  button.run:hover { filter: brightness(1.1); }
-  button.run:disabled { opacity: 0.5; cursor: default; }
-
-  pre {
-    background: #0b0f14;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 14px 16px;
-    overflow-x: auto;
-    font: 12.5px/1.6 var(--mono);
-    margin: 0;
-  }
-  pre .k { color: #79c0ff; }
-  pre .s { color: #a5d6ff; }
-  pre .n { color: #ffab70; }
-  pre .b { color: #ff7b72; }
-  pre .t { color: #7ee787; }
-
-  .status { font: 12px var(--mono); margin-top: 8px; color: var(--muted); }
-  .status.err { color: var(--danger); }
-  .status.ok { color: var(--accent); }
-
-  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
-  @media (max-width: 900px) {
-    main { grid-template-columns: 1fr; }
-    nav { border-right: 0; border-bottom: 1px solid var(--line); max-height: 220px; }
-    .cols { grid-template-columns: 1fr; }
-    .field { grid-template-columns: 1fr; }
-  }
-</style>
+<title>AURORA — tienda</title>
+<meta name="description" content="Tienda online: ropa, casa y bolsos de uso diario. Lana merina, cerámica torneada y lona encerada." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bebas+Neue&family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Karla:wght@400;500&family=Lora:wght@400;500&family=Manrope:wght@400;500;600&family=Outfit:wght@400;500;600;700&family=Playfair+Display:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/styles.css" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f6b3a'/%3E%3Ctext x='16' y='22' font-family='Helvetica' font-size='16' font-weight='700' text-anchor='middle' fill='%23cde94f'%3EA%3C/text%3E%3C/svg%3E" />
 </head>
 <body>
 
-<header>
-  <div class="logo">shopify<span>-agent</span></div>
-  <span class="badge mode" id="mode">…</span>
-  <span class="badge" id="count">…</span>
-  <span class="badge">sin LLM dentro · sin chat</span>
-  <div class="spacer"></div>
-  <div class="links">
-    <a href="/tools" target="_blank">/tools</a>
-    <a href="/tools/openai" target="_blank">/tools/openai</a>
-    <a href="/health" target="_blank">/health</a>
-    <a href="/info" target="_blank">/info</a>
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#/">AUR<span>O</span>RA</a>
+    <nav class="main">
+      <a href="#/" data-i18n="nav.shop">Tienda</a>
+      <a href="#/orders" data-i18n="nav.orders">Pedidos</a>
+      <a href="/admin" data-i18n="nav.admin">Administración</a>
+    </nav>
+    <div class="spacer"></div>
+    <select class="mode lang" id="langSelect" aria-label="Language"></select>
+    <select class="mode lang" id="themeSelect" aria-label="Theme"></select>
+    <span class="mode" id="mode">…</span>
+    <button class="cart-btn" id="cartBtn"><span data-i18n="nav.cart">Carrito</span> <b id="cartCount">0</b></button>
   </div>
 </header>
 
-<main>
-  <nav id="nav"><p style="padding:0 16px;color:#59636e">cargando…</p></nav>
-  <section id="view">
-    <div class="empty">
-      <p>Selecciona una tool de la izquierda para ver su contrato y ejecutarla contra la tienda mock.</p>
-      <p>Esto no es un chat: el servidor ejecuta órdenes, no conversa. Por debajo hay un cliente MCP
-      (<code>POST /mcp</code>), una API REST (<code>POST /tools/{tool}</code>) y un endpoint de lote
-      (<code>POST /commands</code>).</p>
+<section class="hero" id="hero">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow" data-i18n="hero.eyebrow">Colección otoño · invierno</p>
+      <h1 data-i18n-html="hero.title">Cosas bien hechas<br />para el día a día.</h1>
+      <p class="lede" data-i18n="hero.lede">Lana merina, cerámica torneada y lona encerada.</p>
+      <div class="cta-row">
+        <a class="btn primary" href="#/" data-i18n="hero.cta">Ver el catálogo</a>
+        <a class="btn ghost" href="/tools.html" data-i18n="hero.ctaAgent">Cómo se integra con IA</a>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>13</b><span data-i18n="hero.pieces">piezas</span></div>
+        <div class="stat"><b>30</b><span data-i18n="hero.returns">días de devolución</span></div>
+        <div class="stat"><b>24</b><span data-i18n="hero.prep">horas de preparación</span></div>
+      </div>
     </div>
-  </section>
-</main>
-
-<script>
-const $ = (s) => document.querySelector(s);
-const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-const hl = (s) => {
-  let t = esc(s);
-  t = t.replace(/&quot;([^&]*?)&quot;(\s*:)/g, '<span class="k">&quot;$1&quot;</span>$2');
-  t = t.replace(/:\s*&quot;([^&]*?)&quot;/g, ': <span class="s">&quot;$1&quot;</span>');
-  t = t.replace(/:\s*(-?\d+\.?\d*)/g, ': <span class="n">$1</span>');
-  t = t.replace(/:\s*(true|false|null)/g, ': <span class="b">$1</span>');
-  return t;
-};
-
-const GROUPS = [
-  ['Tienda', ['store_info', 'list_locations']],
-  ['Catálogo', ['search_products', 'get_product', 'create_product', 'update_product', 'delete_product', 'manage_variants', 'manage_options']],
-  ['Inventario', ['update_inventory']],
-  ['Pedidos', ['search_orders', 'get_order', 'update_order', 'fulfill_order']],
-  ['Clientes', ['search_customers', 'get_customer', 'update_customer']],
-];
-
-let TOOLS = [];
-
-function kindOf(t) {
-  if (t.destructive) return 'danger';
-  return t.readOnly ? 'read' : 'write';
-}
-
-function renderNav() {
-  const nav = $('#nav');
-  nav.innerHTML = '';
-  for (const [group, names] of GROUPS) {
-    const h = document.createElement('h2');
-    h.textContent = group;
-    nav.appendChild(h);
-    for (const name of names) {
-      const t = TOOLS.find((x) => x.name === name);
-      if (!t) continue;
-      const a = document.createElement('a');
-      a.href = '#' + t.name;
-      a.dataset.tool = t.name;
-      a.innerHTML = `<span class="dot ${kindOf(t)}"></span><span>${esc(t.name)}</span>`;
-      a.onclick = (e) => { e.preventDefault(); show(t.name); };
-      nav.appendChild(a);
-    }
-  }
-}
-
-function fieldFor(name, schema) {
-  const req = (schema.required || []).includes(name);
-  const type = schema.type || 'string';
-  let input;
-  if (Array.isArray(schema.enum)) {
-    input = `<select data-name="${name}" data-type="string"><option value=""></option>${schema.enum
-      .map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join('')}</select>`;
-  } else if (type === 'boolean') {
-    input = `<span class="check"><input type="checkbox" data-name="${name}" data-type="boolean"> <span style="color:#59636e;font-size:12px">true / false</span></span>`;
-  } else if (type === 'object' || type === 'array') {
-    input = `<textarea data-name="${name}" data-type="${type}" placeholder='${type === 'array' ? '[ … ]' : '{ … }"}'></textarea>`;
-  } else {
-    input = `<input data-name="${name}" data-type="${type}" placeholder="${esc(schema.default ?? '')}">`;
-  }
-  const hint = schema.description ? `<span class="hint">${esc(schema.description)}</span>` : '';
-  const meta = [];
-  if (req) meta.push('obligatorio');
-  if (schema.default !== undefined) meta.push('por defecto ' + JSON.stringify(schema.default));
-  if (schema.enum) meta.push(schema.enum.join(' | '));
-  if (schema.minimum !== undefined) meta.push('mín ' + schema.minimum);
-  if (schema.maximum !== undefined) meta.push('máx ' + schema.maximum);
-  return `<div class="field">
-    <label>${esc(name)}${req ? ' <span class="req">*</span>' : ''}${hint}${meta.length ? `<span class="hint">${esc(meta.join(' · '))}</span>` : ''}</label>
-    <div>${input}</div>
-  </div>`;
-}
-
-function show(name) {
-  const t = TOOLS.find((x) => x.name === name);
-  if (!t) return;
-  document.querySelectorAll('nav a').forEach((a) => a.classList.toggle('on', a.dataset.tool === name));
-  const view = $('#view');
-  const props = t.inputSchema.properties || {};
-  const fields = Object.entries(props).map(([k, v]) => fieldFor(k, v)).join('');
-  const required = (t.inputSchema.required || []).length
-    ? `<p class="status">obligatorio: ${t.inputSchema.required.map((r) => esc(r)).join(', ')}</p>`
-    : '';
-
-  view.innerHTML = `
-    <div class="tool-head">
-      <h1>${esc(t.name)}</h1>
-      <span class="kind ${kindOf(t)}">${t.readOnly ? 'lectura' : t.destructive ? 'destructiva' : 'escritura'}</span>
-      ${t.idempotent ? '<span class="kind" style="color:#59636e">idempotente</span>' : ''}
+    <div class="hero-art">
+      <svg viewBox="0 0 800 560" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Composición abstracta de la colección">
+        <defs>
+          <linearGradient id="hg" gradientTransform="rotate(28)">
+            <stop offset="0" stop-color="var(--art-a)"/><stop offset="1" stop-color="var(--art-b)"/>
+          </linearGradient>
+        </defs>
+        <rect width="800" height="560" fill="url(#hg)"/>
+        <rect y="430" width="800" height="130" fill="var(--accent)" opacity="0.08"/>
+        <circle cx="300" cy="250" r="150" fill="var(--accent)" opacity="0.92"/>
+        <circle cx="560" cy="380" r="130" fill="none" stroke="var(--accent)" stroke-width="26" opacity="0.3"/>
+        <rect x="430" y="90" width="270" height="140" rx="18" fill="var(--surface)" opacity="0.5"/>
+        <circle cx="140" cy="120" r="12" fill="var(--accent)" opacity="0.3"/>
+        <circle cx="700" cy="90" r="9" fill="var(--accent)" opacity="0.25"/>
+        <circle cx="640" cy="500" r="7" fill="var(--accent)" opacity="0.25"/>
+      </svg>
     </div>
-    <p class="desc">${esc(t.description)}</p>
-    ${required}
-    <h3>Ejecutar</h3>
-    <form class="form" id="run">${fields}<button class="run" type="submit">Ejecutar ${esc(t.name)}</button></form>
-    <div class="status" id="status"></div>
-    <h3>Respuesta</h3>
-    <pre id="out">—</pre>
-    <h3>Contrato (JSON Schema)</h3>
-    <div class="cols">
-      <pre>${hl(JSON.stringify(t.inputSchema, null, 2))}</pre>
-      <pre>${hl(JSON.stringify({ name: t.name, readOnly: t.readOnly, destructive: t.destructive, idempotent: t.idempotent }, null, 2))}</pre>
-    </div>`;
+  </div>
+</section>
 
-  $('#run').onsubmit = async (e) => {
-    e.preventDefault();
-    const args = {};
-    for (const el of view.querySelectorAll('[data-name]')) {
-      const key = el.dataset.name;
-      const type = el.dataset.type;
-      if (type === 'boolean') { if (el.checked) args[key] = true; continue; }
-      const raw = el.value.trim();
-      if (!raw) continue;
-      if (type === 'number' || type === 'integer') args[key] = Number(raw);
-      else if (type === 'object' || type === 'array') {
-        try { args[key] = JSON.parse(raw); }
-        catch { $('#status').className = 'status err'; $('#status').textContent = `${key} no es JSON válido`; return; }
-      } else args[key] = raw;
-    }
-    const status = $('#status');
-    status.className = 'status';
-    status.textContent = 'ejecutando…';
-    $('#out').textContent = '…';
-    try {
-      const res = await fetch('/tools/' + encodeURIComponent(t.name), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(args),
-      });
-      const payload = await res.json();
-      status.className = 'status ' + (payload.ok ? 'ok' : 'err');
-      status.textContent = payload.ok ? `ok · HTTP ${res.status}` : `error · HTTP ${res.status}`;
-      $('#out').innerHTML = hl(JSON.stringify(payload, null, 2));
-    } catch (err) {
-      status.className = 'status err';
-      status.textContent = String(err);
-    }
-  };
-}
+<div id="crumbs" class="wrap"></div>
+<main id="view"></main>
 
-async function boot() {
-  const health = await (await fetch('/health')).json();
-  const mode = $('#mode');
-  mode.textContent = health.mode === 'mock' ? 'tienda mock offline' : `tienda real · ${health.mode}`;
-  mode.className = 'badge mode' + (health.mode === 'mock' ? '' : ' live');
-  $('#count').textContent = `${health.tools} tools · API ${health.apiVersion}`;
+<footer>
+  <div class="wrap">
+    <div>
+      <h4>AURORA</h4>
+      <p data-i18n="brand.tagline">Northwind, Ceramica Studio y Atelier Nord.</p>
+    </div>
+    <div>
+      <h4 data-i18n="footer.store">Tienda</h4>
+      <ul>
+        <li><a href="#/" data-i18n="nav.shop">Tienda</a></li>
+        <li><a href="#/orders" data-i18n="nav.orders">Pedidos</a></li>
+        <li><a href="/admin" data-i18n="nav.admin">Administración</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4 data-i18n="footer.help">Ayuda</h4>
+      <ul>
+        <li data-i18n="footer.shipping">Envíos en 2–4 días laborables</li>
+        <li data-i18n="footer.free">Gratis a partir de 50 €</li>
+        <li data-i18n="footer.returns">30 días para devolver</li>
+      </ul>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="base">
+      <span data-i18n="footer.rights">© AURORA · tienda de demostración</span>
+      <span data-i18n="footer.servedBy">Servida por shopify-agent</span>
+    </div>
+  </div>
+</footer>
 
-  const tools = await (await fetch('/tools')).json();
-  TOOLS = tools.data;
-  renderNav();
-}
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Carrito">
+  <header>
+    <h2 data-i18n="cart.title">Tu carrito</h2>
+    <button class="x" id="closeDrawer" aria-label="Cerrar">×</button>
+  </header>
+  <div class="body" id="cartBody"></div>
+  <div class="foot" id="cartFoot"></div>
+</aside>
 
-boot().catch((e) => { $('#nav').innerHTML = `<p style="padding:0 16px;color:#f85149">${esc(e.message)}</p>`; });
-</script>
+<!--SHOP_CONFIG-->
+<script src="assets/i18n.js"></script>
+<script src="assets/app.js"></script>
 </body>
 </html>

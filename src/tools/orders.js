@@ -42,6 +42,62 @@ const METAFIELDS_SCHEMA = {
 
 export const orderTools = [
   defineTool({
+    name: 'create_order',
+    title: 'Create order',
+    description:
+      'Place an order in the store. Give one line item per product with the variant id and the quantity. ' +
+      'The order is created as a real order that the store can fulfil afterwards with fulfill_order.',
+    readOnly: false,
+    idempotent: false,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        lineItems: {
+          type: 'array',
+          minItems: 1,
+          description: 'What the customer is buying.',
+          items: {
+            type: 'object',
+            properties: {
+              variantId: {
+                type: 'string',
+                minLength: 1,
+                description: 'Variant id. Get it from get_product or search_products.',
+              },
+              quantity: { type: 'integer', minimum: 1, default: 1, description: 'Units. Default 1.' },
+            },
+            required: ['variantId'],
+            additionalProperties: false,
+          },
+        },
+        customer: {
+          type: 'object',
+          description: 'Who is buying.',
+          properties: {
+            email: { type: 'string', format: 'email' },
+            firstName: { type: 'string' },
+            lastName: { type: 'string' },
+            phone: { type: 'string' },
+          },
+          additionalProperties: false,
+        },
+        shippingAddress: ADDRESS_SCHEMA,
+        note: { type: 'string', description: 'Internal note on the order.' },
+        tags: { type: 'array', items: { type: 'string' }, description: 'Tags for the order.' },
+        financialStatus: {
+          type: 'string',
+          enum: ['PENDING', 'PAID', 'REFUNDED', 'PARTIALLY_REFUNDED', 'VOIDED'],
+          default: 'PENDING',
+          description: 'Payment state. Default PENDING.',
+        },
+      },
+      required: ['lineItems'],
+      additionalProperties: false,
+    },
+    handler: async (backend, args) => ({ order: await backend.createOrder(args) }),
+  }),
+
+  defineTool({
     name: 'search_orders',
     title: 'Search orders',
     description:
@@ -119,6 +175,11 @@ export const orderTools = [
         note: { type: 'string', description: 'Internal note, visible to staff only.' },
         shippingAddress: ADDRESS_SCHEMA,
         metafields: METAFIELDS_SCHEMA,
+        financialStatus: {
+          type: 'string',
+          enum: ['PENDING', 'PAID', 'PARTIALLY_PAID', 'PARTIALLY_REFUNDED', 'REFUNDED', 'VOIDED'],
+          description: 'Payment state of the order.',
+        },
       },
       required: ['id'],
       additionalProperties: false,

@@ -13,7 +13,8 @@
  * never learn which one they are talking to.
  */
 
-import { AppError, ErrorCode, invalidInput, notFound, upstream, forbidden } from '../errors.js';
+import { AppError, ErrorCode, invalidInput, notFound, upstream, forbidden, conflict } from '../errors.js';
+import { vatRate } from '../tax.js';
 
 const REFRESH_MARGIN_MS = 5 * 60 * 1000;
 
@@ -111,6 +112,7 @@ export class ShopifyBackend {
    * @param {string} [config.accessToken]
    * @param {string} [config.clientId]
    * @param {string} [config.clientSecret]
+   * @param {object} [config.store] the shop's own store (categories, settings)
    */
   constructor(config) {
     this.mode = 'shopify';
@@ -119,10 +121,130 @@ export class ShopifyBackend {
     this.staticToken = config.accessToken || null;
     this.clientId = config.clientId || null;
     this.clientSecret = config.clientSecret || null;
+    this.store = config.store || null;
     this.token = this.staticToken;
     this.expiresAt = 0;
     this.refreshTimer = null;
     this.endpoint = `https://${this.domain}/admin/api/${this.apiVersion}/graphql.json`;
+  }
+
+  get settings() {
+    return (
+      this.store?.settings || {
+        currency: 'EUR',
+        taxCountry: 'ES',
+        pricesIncludeTax: true,
+        freeShippingThreshold: 50,
+        shippingFlatRate: 4.9,
+        shopName: 'AURORA',
+        defaultLocale: 'en',
+      }
+    );
+  }
+
+  get taxRate() {
+    return vatRate(this.settings.taxCountry);
+  }
+
+  // ----------------------------------------------------------- categorías
+  // Las categorías son nuestra taxonomía, no colecciones de Shopify: viven en
+  // el store local y se enganchan a cada producto con un metafield.
+
+  async listCategories() {
+    return this.store ? this.store.listCategories() : [];
+  }
+
+  async createCategory(input) {
+    if (!this.store) throw conflict('No local store configured for categories.');
+    return this.store.createCategory(input);
+  }
+
+  async updateCategory(input) {
+    if (!this.store) throw conflict('No local store configured for categories.');
+    const updated = this.store.updateCategory(input.id, input);
+    if (!updated) throw notFound(`No category with id ${input.id}`);
+    return updated;
+  }
+
+  async deleteCategory(input) {
+    if (!this.store) throw conflict('No local store configured for categories.');
+    const removed = this.store.deleteCategory(input.id);
+    if (!removed) throw notFound(`No category with id ${input.id}`);
+    return { deletedCategoryId: removed.id };
+  }
+
+  async assignCategory(input) {
+    const product = await this.getProduct({ id: input.productId });
+    if (!product) throw notFound(`No product with id ${input.productId}`);
+    if (input.categoryId && !this.store?.findCategory(input.categoryId)) {
+      throw notFound(`No category with id ${input.categoryId}`);
+    }
+    await this.#setMetafields(input.productId, [
+      { namespace: 'custom', key: 'category', type: 'single_line_text_field', value: input.categoryId || '' },
+    ]);
+    const refreshed = await this.getProduct({ id: input.productId });
+    return { product: refreshed || product };
+  }
+
+  async setProductImages(input) {
+    const product = await this.getProduct({ id: input.productId });
+    if (!product) throw notFound(`No product with id ${input.productId}`);
+    const images = (input.images || []).filter((image) => image && image.url);
+    await this.#setMetafields(input.productId, [
+      {
+        namespace: 'custom',
+        key: 'images',
+        type: 'json',
+        value: JSON.stringify(images),
+      },
+    ]);
+    const refreshed = await this.getProduct({ id: input.productId });
+    return { product: refreshed || product };
+  }
+
+  async updateSettings(input) {
+    if (!this.store) throw conflict('No local store configured for settings.');
+    return this.store.updateSettings(input);
+  }
+
+  async shopStats() {
+    const data = await this.graphql(
+      `
+      query ShopStats {
+        orders(first: 100, sortKey: CREATED_AT, reverse: true) {
+          nodes {
+            id
+            createdAt
+            displayFinancialStatus
+            totalPriceSet { shopMoney { amount currencyCode } }
+          }
+        }
+        productsCount { count }
+        customersCount { count }
+      }
+    `,
+    );
+    const orders = data.orders?.nodes || [];
+    const paid = orders.filter(
+      (o) => o.displayFinancialStatus === 'PAID' || o.displayFinancialStatus === 'PARTIALLY_PAID',
+    );
+    const revenue = paid.reduce((sum, o) => sum + Number(o.totalPriceSet?.shopMoney?.amount || 0), 0);
+    const settings = this.settings;
+    return {
+      revenue: {
+        amount: revenue.toFixed(2),
+        currencyCode: paid[0]?.totalPriceSet?.shopMoney?.currencyCode || settings.currency,
+      },
+      orderCount: orders.length,
+      paidOrderCount: paid.length,
+      productCount: data.productsCount?.count ?? 0,
+      customerCount: data.customersCount?.count ?? 0,
+      categoryCount: this.store ? this.store.listCategories().length : 0,
+      lowStock: [],
+      taxCountry: settings.taxCountry,
+      vatRate: this.taxRate,
+      currency: settings.currency,
+    };
   }
 
   // ------------------------------------------------------------------- auth
@@ -701,6 +823,57 @@ export class ShopifyBackend {
 
   // ----------------------------------------------------------------- orders
 
+  async createOrder(input) {
+    const lineItems = (input.lineItems || []).map((line) => ({
+      variantId: line.variantId,
+      quantity: line.quantity ?? 1,
+    }));
+    if (!lineItems.length) throw invalidInput('An order needs at least one line item.');
+
+    const draft = {
+      lineItems,
+      ...(input.customer?.email ? { customer: input.customer } : {}),
+      ...(input.shippingAddress ? { shippingAddress: input.shippingAddress } : {}),
+      ...(input.note ? { note: input.note } : {}),
+      ...(input.tags?.length ? { tags: input.tags } : {}),
+      ...(input.financialStatus && input.financialStatus !== 'PENDING'
+        ? { paymentTerms: { paymentPending: true } }
+        : {}),
+    };
+
+    const created = await this.mutate(
+      `
+      mutation DraftOrderCreate($input: DraftOrderInput!) {
+        draftOrderCreate(input: $input) {
+          draftOrder { id }
+          userErrors { field message }
+        }
+      }
+    `,
+      { input: draft },
+      'draftOrderCreate',
+    );
+
+    const draftId = created.draftOrder?.id;
+    if (!draftId) throw upstream('Shopify did not return the draft order id.');
+
+    const completed = await this.mutate(
+      `
+      mutation DraftOrderComplete($id: ID!, $paymentPending: Boolean!) {
+        draftOrderComplete(id: $id, paymentPending: $paymentPending) {
+          order { ...OrderFields }
+          userErrors { field message }
+        }
+      }
+      ${ORDER_FIELDS}
+    `,
+      { id: draftId, paymentPending: true },
+      'draftOrderComplete',
+    );
+
+    return orderView(completed.order);
+  }
+
   async searchOrders({ status = 'any', query, limit = 20, cursor } = {}) {
     const search = [query, status && status !== 'any' ? `status:${status}` : null]
       .filter(Boolean)
@@ -747,26 +920,43 @@ export class ShopifyBackend {
     }
     if (input.shippingAddress !== undefined) order.shippingAddress = input.shippingAddress;
 
-    const payload = await this.mutate(
-      `
-      mutation OrderUpdate($input: OrderUpdateInput!) {
-        orderUpdate(input: $input) {
-          order { ...OrderFields }
-          userErrors { field message }
+    if (input.financialStatus === 'PAID') {
+      await this.mutate(
+        `
+        mutation OrderMarkAsPaid($id: ID!) {
+          orderMarkAsPaid(input: { id: $id }) {
+            order { ...OrderFields }
+            userErrors { field message }
+          }
         }
-      }
-      ${ORDER_FIELDS}
-    `,
-      { input: order },
-      'orderUpdate',
-    );
-    const updated = orderView(payload.order);
-    if (input.metafields?.length) {
-      await this.#setMetafields(updated.id, input.metafields);
-      const refreshed = await this.getOrder({ id: updated.id });
-      return refreshed || updated;
+        ${ORDER_FIELDS}
+      `,
+        { id: input.id },
+        'orderMarkAsPaid',
+      );
+    } else {
+      await this.mutate(
+        `
+        mutation OrderUpdate($input: OrderUpdateInput!) {
+          orderUpdate(input: $input) {
+            order { ...OrderFields }
+            userErrors { field message }
+          }
+        }
+        ${ORDER_FIELDS}
+      `,
+        { input: order },
+        'orderUpdate',
+      );
     }
-    return updated;
+
+    let refreshed = await this.getOrder({ id: input.id });
+    if (input.metafields?.length) {
+      await this.#setMetafields(input.id, input.metafields);
+      refreshed = await this.getOrder({ id: input.id });
+    }
+    if (!refreshed) throw upstream('Shopify did not return the updated order.');
+    return refreshed;
   }
 
   async fulfillOrder(input) {
@@ -1013,6 +1203,20 @@ function productView(product) {
     selectedOptions: variant.selectedOptions || [],
   }));
 
+  const metafields = product.metafields?.nodes || [];
+  const categoryId = metafields.find((m) => m.key === 'category')?.value || '';
+  const imagesMeta = metafields.find((m) => m.key === 'images')?.value;
+  const taxMeta = metafields.find((m) => m.key === 'tax_rate')?.value;
+  let customImages = [];
+  if (imagesMeta) {
+    try {
+      const parsed = JSON.parse(imagesMeta);
+      if (Array.isArray(parsed)) customImages = parsed;
+    } catch {
+      customImages = [];
+    }
+  }
+
   return {
     id: product.id,
     title: product.title,
@@ -1021,20 +1225,24 @@ function productView(product) {
     status: product.status,
     vendor: product.vendor,
     productType: product.productType,
+    category: categoryId ? { id: categoryId, name: categoryId, slug: categoryId } : null,
     tags: product.tags || [],
     createdAt: product.createdAt,
     updatedAt: product.updatedAt,
     imageUrl: product.images?.nodes?.[0]?.url || null,
-    images: product.images?.nodes || [],
+    images: customImages.length
+      ? customImages
+      : (product.images?.nodes || []).map((image) => ({ url: image.url, alt: image.altText || '' })),
     seo: product.seo || null,
     variants,
     collections: product.collections?.nodes || [],
-    metafields: product.metafields?.nodes || [],
+    metafields,
     priceRange: {
       minPrice: moneySet(product.priceRangeV2 ? { shopMoney: product.priceRangeV2.minVariantPrice } : null),
       maxPrice: moneySet(product.priceRangeV2 ? { shopMoney: product.priceRangeV2.maxVariantPrice } : null),
     },
     totalInventory: product.totalInventory,
+    taxRate: taxMeta !== undefined && taxMeta !== '' ? Number(taxMeta) : undefined,
   };
 }
 

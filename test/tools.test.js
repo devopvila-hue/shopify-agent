@@ -14,7 +14,7 @@ function harness() {
 test('the catalogue exposes the expected tools', () => {
   const { registry } = harness();
   const names = registry.list().map((t) => t.name);
-  assert.equal(names.length, 17);
+  assert.equal(names.length, 29);
   for (const expected of [
     'store_info',
     'list_locations',
@@ -26,6 +26,7 @@ test('the catalogue exposes the expected tools', () => {
     'manage_variants',
     'manage_options',
     'update_inventory',
+    'create_order',
     'search_orders',
     'get_order',
     'update_order',
@@ -57,8 +58,8 @@ test('store_info reports the mock backend', async () => {
 
 test('search_products filters by text and status', async () => {
   const { call } = harness();
-  const all = await call('search_products', { limit: 50 });
-  assert.equal(all.products.length, 3);
+  const all = await call('search_products', { limit: 100 });
+  assert.ok(all.products.length >= 10);
 
   const sweaters = await call('search_products', { query: 'sweater' });
   assert.equal(sweaters.products.length, 1);
@@ -71,12 +72,12 @@ test('search_products filters by text and status', async () => {
 
 test('search_products paginates with a cursor', async () => {
   const { call } = harness();
-  const first = await call('search_products', { limit: 2 });
-  assert.equal(first.products.length, 2);
+  const first = await call('search_products', { limit: 12 });
+  assert.equal(first.products.length, 12);
   assert.equal(first.pageInfo.hasNextPage, true);
   assert.ok(first.pageInfo.endCursor);
 
-  const second = await call('search_products', { limit: 2, cursor: first.pageInfo.endCursor });
+  const second = await call('search_products', { limit: 12, cursor: first.pageInfo.endCursor });
   assert.equal(second.products.length, 1);
   assert.equal(second.pageInfo.hasNextPage, false);
 });
@@ -169,6 +170,39 @@ test('update_inventory requires exactly one of quantity or delta', async () => {
     () => call('update_inventory', { variantId: 'x', locationId: 'y' }),
     /quantity.*delta|delta.*quantity/,
   );
+});
+
+test('create_order places a real order with totals and line items', async () => {
+  const { call } = harness();
+  const order = await call('create_order', {
+    lineItems: [
+      { variantId: 'gid://shopify/ProductVariant/2004', quantity: 2 },
+      { variantId: 'gid://shopify/ProductVariant/2001', quantity: 1 },
+    ],
+    customer: { email: 'comprador@example.com', firstName: 'Ana', lastName: 'Solo' },
+    shippingAddress: { address1: 'Calle Mayor 12', city: 'Valencia', country: 'Spain', zip: '46001' },
+  });
+  assert.ok(order.order.id);
+  assert.equal(order.order.customer.email, 'comprador@example.com');
+  assert.equal(order.order.lineItems.length, 2);
+  assert.equal(order.order.lineItems[0].quantity, 2);
+  assert.ok(Number(order.order.totalPrice.amount) > 0);
+
+  const found = await call('search_orders', { query: 'comprador@example.com' });
+  assert.equal(found.orders.length, 1);
+});
+
+test('create_order needs at least one line item', async () => {
+  const { call } = harness();
+  await assert.rejects(() => call('create_order', { lineItems: [] }), /must contain at least 1 items/);
+});
+
+test('the catalogue has enough products for a shop front', async () => {
+  const { call } = harness();
+  const { products } = await call('search_products', { limit: 100 });
+  assert.ok(products.length >= 10, `only ${products.length} products`);
+  const categories = new Set(products.map((p) => p.productType));
+  assert.ok(categories.size >= 4, `only ${categories.size} categories`);
 });
 
 test('search_orders filters by status and by customer email', async () => {

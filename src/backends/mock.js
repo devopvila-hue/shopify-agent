@@ -11,6 +11,7 @@
  */
 
 import { notFound, invalidInput, conflict } from '../errors.js';
+import { vatRate, breakdown, round2 } from '../tax.js';
 
 const DAY = 24 * 60 * 60 * 1000;
 const EPOCH = Date.parse('2026-11-01T09:00:00.000Z');
@@ -41,11 +42,11 @@ function seed() {
       handle: 'aurora-merino-sweater',
       status: 'ACTIVE',
       vendor: 'Northwind',
-      productType: 'Knitwear',
+      productType: 'Apparel',
       tags: ['new', 'wool'],
       createdAt: new Date(EPOCH - 20 * DAY).toISOString(),
       updatedAt: new Date(EPOCH - 2 * DAY).toISOString(),
-      imageUrl: 'https://cdn.shopify.com/mock/aurora-merino-sweater.jpg',
+      imageUrl: null,
       variants: [
         {
           id: 'gid://shopify/ProductVariant/2001',
@@ -101,7 +102,7 @@ function seed() {
       tags: ['handmade'],
       createdAt: new Date(EPOCH - 60 * DAY).toISOString(),
       updatedAt: new Date(EPOCH - 10 * DAY).toISOString(),
-      imageUrl: 'https://cdn.shopify.com/mock/ceramica-mug.jpg',
+      imageUrl: null,
       variants: [
         {
           id: 'gid://shopify/ProductVariant/2004',
@@ -151,6 +152,59 @@ function seed() {
       metafields: [],
     },
   ];
+
+  // The rest of the catalogue, kept compact on purpose.
+  const EXTRA = [
+    { t: 'Fjord Down Vest', c: 'Apparel', v: 'Northwind', p: '145.00', d: 'Relleno reciclado, corte técnico, capucha desmontable.', o: [['S', 6], ['M', 9], ['L', 4]] },
+    { t: 'Tind Wool Scarf', c: 'Apparel', v: 'Northwind', p: '39.00', d: 'Lana merino de Thickness, 180 × 30 cm.', o: [['One size', 25]] },
+    { t: 'Coast Merino Beanie', c: 'Apparel', v: 'Northwind', p: '29.00', d: 'Punto fino, doble vuelta, instructions de lavado tejidas.', o: [['One size', 40]] },
+    { t: 'Ceramica Bowl Set', c: 'Home', v: 'Ceramica Studio', p: '58.00', d: 'Tres bol es torneados y esmaltados a mano.', o: [['Set of 3', 18]] },
+    { t: 'Linen Apron', c: 'Home', v: 'Ceramica Studio', p: '42.00', d: 'Lino grueso con correas de algodón.', o: [['One size', 22]] },
+    { t: 'Cedar Desk Tray', c: 'Home', v: 'Atelier Nord', p: '62.00', d: 'Cedro macizo con rebaje para bolígrafo.', o: [['One size', 11]] },
+    { t: 'Solstice Candle', c: 'Home', v: 'Atelier Nord', p: '28.00', d: 'Cera de soja, 55 horas de burning, notes de hinojo.', o: [['350 g', 30]] },
+    { t: 'Trek Wallet', c: 'Bags', v: 'Northwind', p: '35.00', d: 'Cuero curtido con costura reforzada.', o: [['One size', 52]] },
+    { t: 'Harbour Canvas Tote', c: 'Bags', v: 'Northwind', p: '79.00', d: 'Lona encerada, base reforzada, 38 × 42 cm.', o: [['Natural', 14], ['Negro', 8]] },
+    { t: 'Field Notebook Set', c: 'Paper', v: 'Atelier Nord', p: '19.00', d: 'Tres cuadernos de papel de algodón cosido.', o: [['Set of 3', 64]] },
+  ];
+
+  let variantSeq = 2200;
+  let itemSeq = 3200;
+  for (const [index, spec] of EXTRA.entries()) {
+    const productId = `gid://shopify/Product/${1100 + index}`;
+    const variants = spec.o.map(([value, stock]) => {
+      variantSeq += 1;
+      itemSeq += 1;
+      return {
+        id: `gid://shopify/ProductVariant/${variantSeq}`,
+        title: value,
+        price: spec.p,
+        compareAtPrice: null,
+        sku: `${spec.t.slice(0, 3).toUpperCase()}-${value.replace(/\s+/g, '').slice(0, 4).toUpperCase()}`,
+        barcode: '',
+        taxable: true,
+        tracked: true,
+        inventoryItemId: `gid://shopify/InventoryItem/${itemSeq}`,
+        selectedOptions: [{ name: 'Title', value }],
+        inventory: { [locationId]: stock },
+      };
+    });
+    products.push({
+      id: productId,
+      title: spec.t,
+      descriptionHtml: `<p>${spec.d}</p>`,
+      handle: slugify(spec.t),
+      status: 'ACTIVE',
+      vendor: spec.v,
+      productType: spec.c,
+      tags: [spec.c.toLowerCase()],
+      createdAt: new Date(EPOCH - (30 + index * 4) * DAY).toISOString(),
+      updatedAt: new Date(EPOCH - (index + 1) * DAY).toISOString(),
+      imageUrl: null,
+      variants,
+      collections: [],
+      metafields: [],
+    });
+  }
 
   const customers = [
     {
@@ -389,25 +443,135 @@ function money(amount, currency) {
 }
 
 export class MockBackend {
-  constructor() {
+  /**
+   * @param {object} [store] a ShopStore, for categories, images and tax
+   */
+  constructor(store = null) {
     this.mode = 'mock';
     this.apiVersion = 'mock';
     this.data = seed();
     this.currency = this.data.shop.currency;
+    this.store = store;
+  }
+
+  get settings() {
+    return (
+      this.store?.settings || {
+        currency: this.currency,
+        taxCountry: 'ES',
+        pricesIncludeTax: true,
+        freeShippingThreshold: 50,
+        shippingFlatRate: 4.9,
+        shopName: 'AURORA',
+        defaultLocale: 'en',
+      }
+    );
+  }
+
+  /** VAT rate that applies to the shop right now. */
+  get taxRate() {
+    return vatRate(this.settings.taxCountry);
   }
 
   async storeInfo() {
+    const settings = this.settings;
     return {
       mode: this.mode,
-      shop: this.data.shop.name,
+      shop: settings.shopName || this.data.shop.name,
       domain: this.data.shop.domain,
       apiVersion: this.apiVersion,
-      currency: this.currency,
+      currency: settings.currency || this.currency,
+      taxCountry: settings.taxCountry,
+      vatRate: this.taxRate,
+      pricesIncludeTax: settings.pricesIncludeTax !== false,
+      defaultLocale: settings.defaultLocale || 'en',
       locationCount: this.data.locations.length,
       productCount: this.data.products.length,
       orderCount: this.data.orders.length,
       customerCount: this.data.customers.length,
       live: false,
+    };
+  }
+
+  // ----------------------------------------------------------- categorías
+
+  async listCategories() {
+    if (!this.store) return [];
+    return this.store.listCategories();
+  }
+
+  async createCategory(input) {
+    if (!this.store) throw conflict('This backend does not support categories.');
+    return this.store.createCategory(input);
+  }
+
+  async updateCategory(input) {
+    if (!this.store) throw conflict('This backend does not support categories.');
+    const updated = this.store.updateCategory(input.id, input);
+    if (!updated) throw notFound(`No category with id ${input.id}`);
+    return updated;
+  }
+
+  async deleteCategory(input) {
+    if (!this.store) throw conflict('This backend does not support categories.');
+    const removed = this.store.deleteCategory(input.id);
+    if (!removed) throw notFound(`No category with id ${input.id}`);
+    return { deletedCategoryId: removed.id };
+  }
+
+  async assignCategory(input) {
+    if (!this.store) throw conflict('This backend does not support categories.');
+    const product = this.#findProduct(input.productId);
+    if (!product) throw notFound(`No product with id ${input.productId}`);
+    if (input.categoryId) {
+      const category = this.store.findCategory(input.categoryId);
+      if (!category) throw notFound(`No category with id ${input.categoryId}`);
+    }
+    this.store.setProductMeta(product.id, { category: input.categoryId || null });
+    return { product: this.#productView(product) };
+  }
+
+  async setProductImages(input) {
+    if (!this.store) throw conflict('This backend does not support images.');
+    const product = this.#findProduct(input.productId);
+    if (!product) throw notFound(`No product with id ${input.productId}`);
+    this.store.setProductMeta(product.id, { images: input.images || [] });
+    return { product: this.#productView(product) };
+  }
+
+  async updateSettings(input) {
+    if (!this.store) throw conflict('This backend does not support settings.');
+    return this.store.updateSettings(input);
+  }
+
+  async shopStats() {
+    const settings = this.settings;
+    const paid = this.data.orders.filter(
+      (o) => o.displayFinancialStatus === 'PAID' || o.displayFinancialStatus === 'PARTIALLY_PAID',
+    );
+    const revenue = paid.reduce((sum, o) => sum + Number(o.totalPrice.amount), 0);
+    const lowStock = this.data.products.flatMap((p) =>
+      p.variants
+        .filter((v) => Object.values(v.inventory).some((n) => n > 0 && n <= 5))
+        .map((v) => ({
+          productId: p.id,
+          title: p.title,
+          variantId: v.id,
+          variant: v.title,
+          available: Object.values(v.inventory).reduce((a, b) => a + b, 0),
+        })),
+    );
+    return {
+      revenue: { amount: revenue.toFixed(2), currencyCode: settings.currency || this.currency },
+      orderCount: this.data.orders.length,
+      paidOrderCount: paid.length,
+      productCount: this.data.products.length,
+      customerCount: this.data.customers.length,
+      categoryCount: this.store ? this.store.listCategories().length : 0,
+      lowStock,
+      taxCountry: settings.taxCountry,
+      vatRate: this.taxRate,
+      currency: settings.currency || this.currency,
     };
   }
 
@@ -476,6 +640,13 @@ export class MockBackend {
       product.collections = input.collectionsToJoin.map((cid) => ({ id: cid, title: cid }));
     }
     this.data.products.push(product);
+    if (this.store) {
+      const meta = {};
+      if (input.categoryId !== undefined) meta.category = input.categoryId;
+      if (input.images !== undefined) meta.images = input.images;
+      if (input.taxRate !== undefined) meta.taxRate = input.taxRate;
+      if (Object.keys(meta).length) this.store.setProductMeta(product.id, meta);
+    }
     return this.#productView(product);
   }
 
@@ -500,6 +671,13 @@ export class MockBackend {
     }
     if (input.collectionsToLeave?.length) {
       product.collections = product.collections.filter((c) => !input.collectionsToLeave.includes(c.id));
+    }
+    if (this.store) {
+      const meta = {};
+      if (input.categoryId !== undefined) meta.category = input.categoryId;
+      if (input.images !== undefined) meta.images = input.images;
+      if (input.taxRate !== undefined) meta.taxRate = input.taxRate;
+      if (Object.keys(meta).length) this.store.setProductMeta(product.id, meta);
     }
     product.updatedAt = new Date(EPOCH).toISOString();
     return this.#productView(product);
@@ -646,6 +824,64 @@ export class MockBackend {
 
   // ------------------------------------------------------------------ orders
 
+  async createOrder(input) {
+    const requested = input.lineItems || [];
+    if (!requested.length) throw invalidInput('An order needs at least one line item.');
+
+    const lineItems = requested.map((item) => {
+      const variant = this.#findVariant(item.variantId);
+      if (!variant) throw notFound(`No variant with id ${item.variantId}`);
+      const product = this.#productOfVariant(variant);
+      const quantity = item.quantity ?? 1;
+      const unit = Number(variant.price);
+      if (!Number.isFinite(unit)) throw invalidInput(`Variant ${variant.id} has no usable price.`);
+      return {
+        id: gid('LineItem', `8${100 + this.data.orders.length}${requested.indexOf(item)}`),
+        title: product.title,
+        quantity,
+        fulfilledQuantity: 0,
+        totalPrice: money((unit * quantity).toFixed(2), this.currency),
+        variant: { id: variant.id, title: variant.title, sku: variant.sku },
+      };
+    });
+
+    const subtotal = lineItems.reduce((sum, line) => sum + Number(line.totalPrice.amount), 0);
+    const settings = this.settings;
+    const threshold = settings.freeShippingThreshold ?? 50;
+    const shipping = subtotal >= threshold ? 0 : (settings.shippingFlatRate ?? 4.9);
+    const tax = round2((subtotal * this.taxRate) / 100);
+    const total = round2(subtotal + shipping + tax);
+
+    const customer = input.customer?.email
+      ? {
+          id: gid('Customer', String(6100 + this.data.customers.length)),
+          firstName: input.customer.firstName || '',
+          lastName: input.customer.lastName || '',
+          email: input.customer.email,
+        }
+      : null;
+
+    const order = {
+      id: gid('Order', String(7100 + this.data.orders.length)),
+      name: `#${1000 + this.data.orders.length + 1}`,
+      createdAt: new Date(EPOCH).toISOString(),
+      displayFinancialStatus: input.financialStatus || 'PENDING',
+      displayFulfillmentStatus: 'UNFULFILLED',
+      totalPrice: money(total.toFixed(2), this.currency),
+      subtotalPrice: money(subtotal.toFixed(2), this.currency),
+      totalShippingPrice: money(shipping.toFixed(2), this.currency),
+      totalTax: money(tax.toFixed(2), this.currency),      customer,
+      shippingAddress: input.shippingAddress || null,
+      lineItems,
+      tags: input.tags || [],
+      note: input.note || '',
+      metafields: [],
+    };
+
+    this.data.orders.push(order);
+    return this.#orderView(order);
+  }
+
   async searchOrders({ status = 'any', query, limit = 20, cursor } = {}) {
     let items = this.data.orders;
     if (status && status !== 'any') {
@@ -679,6 +915,7 @@ export class MockBackend {
     if (input.note !== undefined) order.note = input.note;
     if (input.shippingAddress !== undefined) order.shippingAddress = input.shippingAddress;
     if (input.metafields) order.metafields = mergeMetafields(order.metafields, input.metafields);
+    if (input.financialStatus !== undefined) order.displayFinancialStatus = input.financialStatus;
     return this.#orderView(order);
   }
 
@@ -771,6 +1008,18 @@ export class MockBackend {
     return this.data.customers.find((c) => c.id === id || numericId(c.id) === numericId(id));
   }
 
+  #findVariant(variantId) {
+    for (const product of this.data.products) {
+      const variant = product.variants.find((v) => v.id === variantId);
+      if (variant) return variant;
+    }
+    return null;
+  }
+
+  #productOfVariant(variant) {
+    return this.data.products.find((p) => p.variants.includes(variant)) || { title: variant.title };
+  }
+
   #productView(product) {
     const variants = product.variants.map((v) => ({
       id: v.id,
@@ -787,6 +1036,9 @@ export class MockBackend {
       inventoryByLocation: { ...v.inventory },
     }));
     const prices = variants.map((v) => Number(v.price)).filter((n) => Number.isFinite(n));
+    const category = this.store ? this.store.categoryFor(product) : null;
+    const images = this.store ? this.store.imagesFor(product) : product.imageUrl ? [{ url: product.imageUrl, alt: product.title }] : [];
+    const taxRate = this.store ? this.store.taxRateFor(product, this.taxRate) : this.taxRate;
     return {
       id: product.id,
       title: product.title,
@@ -795,10 +1047,12 @@ export class MockBackend {
       status: product.status,
       vendor: product.vendor,
       productType: product.productType,
+      category: category ? { id: category.id, name: category.name, slug: category.slug } : null,
       tags: product.tags,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
       imageUrl: product.imageUrl,
+      images,
       seo: product.seo || null,
       variants,
       collections: product.collections,
@@ -808,6 +1062,7 @@ export class MockBackend {
         maxPrice: money(prices.length ? Math.max(...prices).toFixed(2) : '0.00', this.currency),
       },
       totalInventory: variants.reduce((sum, v) => sum + v.inventoryQuantity, 0),
+      taxRate,
     };
   }
 

@@ -1,37 +1,33 @@
 # shopify-agent
 
-An **agentic Shopify server**. It exposes Shopify Admin operations as callable
-tools over three transports, so any tool that can receive orders from an AI
-can drive a Shopify store.
+Una **tienda online con panel de administración** y, encima, una **API de
+tools** para que cualquier agente de IA pueda manejarla.
 
-**There is no chat interface and no LLM inside.** This server does not talk to
-the user. It executes orders. That is the whole point: you put it behind
-Claude, Cursor, an OpenAI function-calling loop, n8n, a Make scenario, or your
-own agent, and the agent gets a clean, typed tool surface.
+No hay chat. No hay modelo dentro. El servidor ejecuta órdenes: las del
+dueño desde el panel, las de una IA desde MCP o desde REST.
 
 ```
-┌──────────────┐   MCP / HTTP / OpenAI functions   ┌────────────────┐   GraphQL   ┌─────────┐
-│ your AI tool │ ───────────────────────────────▶  │ shopify-agent │ ──────────▶ │ Shopify │
-└──────────────┘                                   └────────────────┘             └─────────┘
+┌────────────────┐   MCP · REST · OpenAI functions   ┌────────────────┐   GraphQL   ┌─────────┐
+│  agente de IA  │ ────────────────────────────────▶ │ shopify-agent  │ ──────────▶ │ Shopify │
+└────────────────┘                                   └────────────────┘             └─────────┘
+┌────────────────┐
+│  panel /admin  │ ───── la misma API de tools ──────▶
+└────────────────┘
 ```
 
-- **Zero runtime dependencies.** Node's own `http` and `fetch`. No SDK, no
-  `zod`, no `graphql-request`, no `dotenv`, no build step.
-- **Runs offline.** With no credentials it starts against a built-in mock
-  store, so you can develop, test and demo without touching a real store.
-- **One catalogue, three transports.** MCP, plain REST and OpenAI function
-  definitions are generated from the same 17 tool definitions.
-
-### Look at it
-
-Open **http://127.0.0.1:8788** in a browser: a catalogue page listing all 17
-tools, their contracts, and a form to execute any of them against the mock
-store. It is a catalogue and a test console, not a chat: there is no
-conversation and no model behind it.
+- **Cero dependencias de runtime.** El `http` y el `fetch` de Node. Sin SDK,
+  sin `zod`, sin `graphql-request`, sin build.
+- **Funciona sin credenciales.** Arranca contra una tienda mock sembrada.
+- **Cuatro idiomas**: inglés, español, rumano y húngaro.
+- **IVA por país**, con precios mostrados con el impuesto incluido (norma UE).
+- **30 plantillas de diseño**, una por industria, con selector en el panel.
+- **Stripe** para el pago con tarjeta, sin SDK y con webhook firmado.
+- **Todo en software libre.** Shopify cobra por cada módulo; esto no cobra
+  por categorías, ni por idiomas, ni por plantillas, ni por panel.
 
 ---
 
-## Quick start
+## Arranque rápido
 
 ```bash
 git clone https://github.com/devopvila-hue/shopify-agent.git
@@ -39,33 +35,136 @@ cd shopify-agent
 npm start
 ```
 
-That is it — no `npm install` needed, there are no dependencies. The server
-starts on `http://127.0.0.1:8788` against the offline mock store.
+Sin `npm install`: no hay dependencias que instalar.
+
+| | |
+| --- | --- |
+| Tienda | <http://127.0.0.1:8788/> |
+| Panel del dueño | <http://127.0.0.1:8788/admin> |
+| Catálogo de tools | <http://127.0.0.1:8788/tools.html> |
+| API de tools | <http://127.0.0.1:8788/tools> |
+
+Para hablar con una tienda real, copia `.env.example` a `.env`, rellena las
+credenciales y `npm start` otra vez. El resto de la API es idéntica.
 
 ```bash
-curl http://127.0.0.1:8788/health
-# {"ok":true,"status":"ready","mode":"mock","tools":17,"apiVersion":"mock"}
-
-curl -X POST http://127.0.0.1:8788/tools/search_products \
-  -H 'Content-Type: application/json' \
-  -d '{"query":"sweater"}'
-```
-
-To talk to a real store, copy `.env.example` to `.env` and fill in your
-credentials. Then `npm start` again.
-
-```bash
-npm test          # 62 tests, no network needed
-npm run smoke     # boots the server and exercises all three transports
+npm test          # 83 tests, sin red
+npm run smoke     # arranca el server y prueba los tres transportes
+npm run build     # exporta el catálogo estático y genera dist/
 ```
 
 ---
 
-## Connecting it to your AI tool
+## La tienda
 
-### 1. Any MCP client (Claude Desktop, Claude Code, Cursor, Zed, …)
+- Portada con hero, catálogo por categorías, ficha de producto con variantes
+  y stock, carrito lateral y checkout.
+- Idiomas: inglés, español, rumano y húngaro. El idioma se detecta por
+  `Accept-Language`, se puede forzar con `?lang=ro` y se recuerda en el
+  navegador.
+- Precios netos guardados, mostrados con IVA según el país de la tienda.
+  El IVA se desglosa en el carrito.
+- Imágenes reales de producto (subidas desde el panel o por URL). Cuando no
+  hay imagen, la tienda dibuja una ilustración determinista a partir del id,
+  así que no depende de ninguna CDN.
+- Ilustración del hero y de los productos generadas en SVG: cero ficheros de
+  imagen, cero peticiones extra.
 
-Point the client at the HTTP endpoint:
+## El panel de administración (`/admin`)
+
+Cinco secciones, en los cuatro idiomas:
+
+| Sección | Qué haces |
+| --- | --- |
+| **Panel** | Ingresos, pedidos, productos, stock bajo y últimos pedidos. |
+| **Productos** | Editar título, descripción, marca, categoría, precio, IVA, estado e imágenes. Subir ficheros o pegar URLs. Ver variantes y su stock. |
+| **Categorías** | Crear, renombrar y borrar categorías, con su propio tipo de IVA. |
+| **Pedidos** | Ver el detalle, marcar como pagado y marcar como enviado con seguimiento. |
+| **Ajustes** | Nombre, moneda, país de impuestos, IVA incluido, envío, idioma por defecto y estado de Stripe. |
+| **Diseño** | Las 30 plantillas: eliges una y se aplica a la tienda. |
+
+El panel es otro cliente de la misma API de tools: **todo lo que haces desde
+el panel es una tool que un agente también puede ejecutar**.
+
+El panel es local por defecto. Si expones el servidor a internet, ponle
+`ADMIN_PASSWORD` y el panel pide contraseña.
+
+---
+
+## Las 30 plantillas de diseño
+
+Una por industria: moda, cerámica, plantas, deportes, electrónica, belleza,
+joyería, panadería, café, vino, cerveza, orgánica, bricolage, outdoor,
+ciclismo, mascotas, infantil, juguetes, papelería, fotografía, música, motor,
+jardín, viajes, skincare, relojes, zapatillas, miel y senderismo.
+
+Cada plantilla es un conjunto de tokens (paleta, tipografías, radio, densidad)
+más tres conmutadores estructurales: tipo de portada, estilo de tarjeta y
+forma de los botones. El CSS no tiene mil reglas: lee variables CSS y un
+handful de atributos `data-*` en `<html>`. Cambiar de plantilla es cambiar
+tokens, y por eso son treinta de verdad y no treinta forks del CSS.
+
+```bash
+# ver la tienda con otra plantilla
+open "http://127.0.0.1:8788/?theme=brasa"
+```
+
+El selector de la cabecera y la galería del panel escriben el mismo ajuste
+(`defaultTheme`), así que la plantilla elegida se aplica a todo el mundo.
+
+---
+
+## IVA
+
+Los precios se guardan **netos**, como en Shopify. En la UE el precio que ve
+el consumidor lleva el IVA incluido, así que la tienda convierte de neto a
+bruto y lo desglosa en el carrito.
+
+Tipos estándar vigentes en 2026 (Your Europe / Tax Foundation). El país se
+configura en Ajustes y también puede fijarse por categoría o por producto:
+
+| | | | |
+| --- | --- | --- | --- |
+| HU 27% | FI 25.5% | DK/SE/HR 25% | EE 24% |
+| GR 24% | PL/PT/SK 23% | IE 23% | IT/SI 22% |
+| BE/CZ/LT/LV/NL 21% | ES/RO 21% | FR 20% | AT/BG 20% |
+| GB 20% | DE 19% | CY 19% | MT 18% |
+| LU 17% | NO 25% | CH 8.1% | |
+
+`list_tax_rates` devuelve la tabla completa.
+
+---
+
+## Stripe
+
+Sin SDK: la API de Stripe se habla con `fetch` y el cuerpo en
+`application/x-www-form-urlencoded`, y el webhook se verifica firmando el
+payload con HMAC-SHA256 como manda Stripe.
+
+```bash
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+Sin `STRIPE_SECRET_KEY` la tienda funciona igual con pago simulado y el
+botón de tarjeta no aparece. Con la clave puesta, el checkout crea una
+Checkout Session alojada por Stripe; el webhook `POST /webhooks/stripe` marca
+el pedido como pagado.
+
+---
+
+## La API de tools
+
+Treinta tools desde un único catálogo, con tres transportes:
+
+| Transporte | Endpoint | Para qué |
+| --- | --- | --- |
+| MCP Streamable HTTP | `POST /mcp` | Claude Desktop/Code, Cursor, Zed |
+| REST | `POST /tools/{tool}` | Cualquier bucle propio de function-calling |
+| Lote | `POST /commands` | Varias órdenes en una llamada |
+| OpenAI | `GET /tools/openai` | Definiciones de función listas para tu `tools` |
+
+### Conectar un cliente MCP
 
 ```json
 {
@@ -78,77 +177,13 @@ Point the client at the HTTP endpoint:
 }
 ```
 
-If the client only speaks stdio MCP, pipe it:
+Si el cliente solo habla stdio:
 
 ```bash
 npx @modelcontextprotocol/server-proxy --url http://127.0.0.1:8788/mcp
 ```
 
-### 2. Any OpenAI-compatible function-calling loop
-
-The catalogue is already in the shape the OpenAI API expects:
-
-```bash
-curl http://127.0.0.1:8788/tools/openai
-```
-
-```jsonc
-[
-  {
-    "type": "function",
-    "function": {
-      "name": "search_products",
-      "description": "List or search catalogue products. …",
-      "parameters": { "type": "object", "properties": { /* … */ } }
-    }
-  }
-]
-```
-
-Feed that straight into your `tools` parameter, then call the tool the model
-chose:
-
-```bash
-curl -X POST http://127.0.0.1:8788/tools/search_products \
-  -H 'Content-Type: application/json' \
-  -d '{"query":"hoodie","limit":5}'
-```
-
-### 3. A batch of orders in one request
-
-`POST /commands` takes a list and returns one result per command. A failure
-in one command does not stop the others.
-
-```bash
-curl -X POST http://127.0.0.1:8788/commands \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "commands": [
-      { "tool": "list_locations", "arguments": {} },
-      { "tool": "search_products", "arguments": { "query": "mug" } },
-      { "tool": "get_order", "arguments": { "orderId": "gid://shopify/Order/7001" } }
-    ]
-  }'
-```
-
-```jsonc
-{
-  "ok": true,
-  "data": {
-    "results": [
-      { "tool": "list_locations", "ok": true, "data": { "locations": [ /* … */ ] } },
-      { "tool": "search_products", "ok": true, "data": { "products": [ /* … */ ] } },
-      { "tool": "get_order", "ok": false, "error": { "code": "not_found", "message": "…" } }
-    ],
-    "succeeded": 2,
-    "failed": 1
-  }
-}
-```
-
-### 4. A custom agent loop
-
-Every response has the same shape, so the loop is trivial:
+### Bucle de function-calling
 
 ```js
 const res = await fetch('http://127.0.0.1:8788/tools/' + name, {
@@ -161,147 +196,122 @@ if (!ok) return modelFeedback(error.message);
 return modelFeedback(data);
 ```
 
----
+### Un lote de órdenes
 
-## Endpoints
-
-| Method | Path | What it does |
-| --- | --- | --- |
-| `GET` | `/` | Catalogue page: browse the tools and run them against the mock. |
-| `GET` | `/health` | Liveness and readiness. Always open. |
-| `GET` | `/info` | Service description and the endpoint list. |
-| `GET` | `/tools` | Full catalogue with JSON Schemas. |
-| `GET` | `/tools/openai` | The catalogue as OpenAI function definitions. |
-| `GET` | `/tools/{tool}` | One tool's schema and annotations. |
-| `POST` | `/tools/{tool}` | Run one tool. The body is the tool's arguments. |
-| `POST` | `/tools` | Run one tool, name and args in the body. |
-| `POST` | `/commands` | Run a batch of tools. |
-| `POST` | `/mcp` | MCP Streamable HTTP (JSON-RPC 2.0). |
-
-Responses are always `{ "ok": true, "data": … }` or
-`{ "ok": false, "error": { "code", "message", "details" } }`.
-
-Error codes: `invalid_input`, `not_found`, `unauthorized`, `forbidden`,
-`conflict`, `upstream_error`, `unsupported`, `internal_error`.
-
----
-
-## The tools
-
-| Tool | Kind | What it does |
-| --- | --- | --- |
-| `store_info` | read | Which store, live or mock, API version, auth mode. |
-| `list_locations` | read | Store locations. You need one to move stock. |
-| `search_products` | read | Search the catalogue, paginated. |
-| `get_product` | read | One product with variants, prices and stock. |
-| `create_product` | write | New product, optionally with options. |
-| `update_product` | write | Change title, handle, status, tags, SEO, collections. |
-| `delete_product` | write, destructive | Permanent delete. Needs `confirm: true`. |
-| `manage_variants` | write | Create, update or delete variants. |
-| `manage_options` | write, destructive | Create, rename or delete product options. |
-| `update_inventory` | write | Set or adjust stock at a location. |
-| `search_orders` | read | Search orders by status or query. |
-| `get_order` | read | One order with line items and totals. |
-| `update_order` | write | Tags, email, note, shipping address, metafields. |
-| `fulfill_order` | write | Ship items, with optional tracking. |
-| `search_customers` | read | Search customers by email, name or tag. |
-| `get_customer` | read | One customer with addresses and spend. |
-| `update_customer` | write | Name, email, phone, tags, note, tax exemption. |
-
-Read-only tools are flagged as such (`readOnly` in the catalogue,
-`annotations.readOnlyHint` in MCP), so a host can allowlist reads and let a
-model write only when it should.
-
-Destructive tools require `confirm: true`. An agent that forgets it gets a
-clear error instead of a deleted product.
-
----
-
-## Configuration
-
-Everything is environment variables. A `.env` file next to `package.json` is
-read automatically; real environment variables always win.
-
-| Variable | Default | Meaning |
-| --- | --- | --- |
-| `SHOPIFY_MODE` | `auto` | `mock`, `shopify`, or `auto`. |
-| `SHOPIFY_STORE_DOMAIN` | — | `your-store.myshopify.com`. Required for `shopify`. |
-| `SHOPIFY_ACCESS_TOKEN` | — | Static `shpat_…` token (legacy custom apps). |
-| `SHOPIFY_CLIENT_ID` | — | Client id for the client-credentials flow. |
-| `SHOPIFY_CLIENT_SECRET` | — | Client secret for the client-credentials flow. |
-| `SHOPIFY_API_VERSION` | `2026-10` | Admin API version. |
-| `HOST` | `127.0.0.1` | Bind address. |
-| `PORT` | `8788` | Bind port. |
-| `AGENT_API_KEY` | — | If set, every call needs `Authorization: Bearer <key>`. |
-| `SHOPIFY_REQUIRE_AUTH` | `false` | Refuse to start in mock mode. |
-
-### Authentication
-
-Shopify stopped issuing static Admin API tokens through its UI in January
-2026, so the **client-credentials** flow is the forward path:
-
-```
-SHOPIFY_STORE_DOMAIN=your-store.myshopify.com
-SHOPIFY_CLIENT_ID=...
-SHOPIFY_CLIENT_SECRET=...
+```bash
+curl -X POST http://127.0.0.1:8788/commands \
+  -H 'Content-Type: application/json' \
+  -d '{"commands":[{"tool":"search_products","arguments":{"query":"mug"}},
+                   {"tool":"list_locations","arguments":{}}]}'
 ```
 
-The server exchanges the credentials for a short-lived token and refreshes it
-in the background, so a long-lived agent process never has to think about it.
-Static tokens still work if that is all you have.
+Un fallo en un comando no para los demás: cada resultado lleva su propio
+`ok`.
+
+### Catálogo
+
+- Productos: buscar, leer, crear, actualizar, borrar, variantes, opciones.
+- Inventario: ajuste absoluto o relativo por ubicación.
+- Pedidos: crear, buscar, leer, actualizar, enviar.
+- Clientes: buscar, leer, actualizar.
+- Administración: categorías, imágenes, subida de ficheros, estadísticas,
+  ajustes, tabla de IVA, sesión de checkout de Stripe.
+
+Las tools de lectura se marcan como `readOnly`, las destructivas piden
+`confirm: true`, y las de escritura llevan `idempotent` cuando lo son.
 
 ---
 
-## What was simplified, and why
+## Configuración
 
-This started as a reverse engineering pass over the published
-`shopify-mcp` package (v1.0.8): 14 tools, stdio transport only, 6 runtime
-dependencies, a module-level mutable client, and no inventory or fulfillment
-tool at all. The result here keeps the useful ideas and drops the rest.
-
-| | `shopify-mcp` 1.0.8 | `shopify-agent` |
+| Variable | Por defecto | Para qué |
 | --- | --- | --- |
-| Transports | stdio only | MCP over HTTP, REST, OpenAI functions |
-| Runtime dependencies | 6 (`zod`, `graphql-request`, `dotenv`, `minimist`, …) | 0 |
-| State | module-level mutable singleton client | one injected backend per request |
-| Errors | raw GraphQL exceptions | uniform `{ code, message }` envelope |
-| Pagination | `limit` only | opaque cursor everywhere |
-| Inventory | missing | `update_inventory` |
-| Fulfillment | missing | `fulfill_order` |
-| Metafields | passed into `productUpdate` (ignored by Shopify) | `metafieldsSet` |
-| Options API | hand rolled | `productOptionsCreate` / `productOptionUpdate` / `productOptionsDelete` |
-| Runs without a store | no | yes, offline mock |
-| Tests | none | 62 |
+| `SHOPIFY_MODE` | `auto` | `mock`, `shopify` o `auto`. |
+| `SHOPIFY_STORE_DOMAIN` | — | `tu-tienda.myshopify.com`. |
+| `SHOPIFY_ACCESS_TOKEN` | — | Token estático `shpat_…` (apps antiguas). |
+| `SHOPIFY_CLIENT_ID` / `_SECRET` | — | Client credentials (apps del Dev Dashboard). |
+| `SHOPIFY_API_VERSION` | `2026-10` | Versión de la Admin API. |
+| `HOST` / `PORT` | `127.0.0.1` / `8788` | Dirección de escucha. |
+| `AGENT_API_KEY` | — | Si se pone, la API de tools pide `Bearer <key>`. |
+| `ADMIN_PASSWORD` | — | Contraseña del panel. |
+| `SHOP_DATA_FILE` | `./data/shop.json` | Dónde viven categorías, imágenes y ajustes. |
+| `STRIPE_SECRET_KEY` | — | Pago con tarjeta. |
+| `STRIPE_WEBHOOK_SECRET` | — | Verificación del webhook. |
+| `PUBLIC_BASE_URL` | — | URLs de vuelta de Stripe. |
 
-The live backend was written against the current Admin GraphQL docs
-(`2026-10` is the latest stable as of now), including the version-gated
-`@idempotent` directive and `changeFromQuantity` on inventory adjustments.
+La autenticación contra Shopify usa el flujo de **client credentials** cuando
+puede: Shopify dejó de emitir tokens estáticos en su interfaz en enero de
+2026. El servidor los cambia por uno de vida corta y lo refresca solo.
 
 ---
 
-## Layout
+## Estructura
 
 ```
 src/
-  index.js            entry point: config → backend → server
-  config.js           environment and .env
-  server.js           HTTP routing, auth, error envelope
+  index.js            config → backend → server
+  config.js           entorno y .env
+  server.js           rutas, auth, error envelope, estáticos, webhook
   mcp.js              MCP Streamable HTTP (JSON-RPC 2.0)
-  registry.js         the tool catalogue and the three serialisations
-  validate.js         small JSON Schema validator
-  errors.js           the error contract
-  tools/              one file per domain
+  registry.js         el catálogo de tools y sus tres serializaciones
+  validate.js         validador de JSON Schema
+  errors.js           el contrato de error
+  i18n.js             los cuatro idiomas
+  tax.js              IVA por país, neto/bruto, desglose del carrito
+  themes.js           las 30 plantillas
+  store.js            categorías, imágenes y ajustes en JSON
+  stripe.js           Stripe sin SDK
+  uploads.js          subida de imágenes
+  tools/              un fichero por dominio
   backends/
-    mock.js           offline, seeded, in-memory
-    shopify.js        live Admin GraphQL
+    mock.js           offline, sembrado
+    shopify.js        Admin GraphQL en vivo
 public/
-  index.html          the catalogue page
-test/                 63 tests
+  index.html          la tienda
+  admin/              el panel del dueño
+  tools.html          el catálogo de tools
+  assets/             estilos, script, catálogo e i18n
+test/                 83 tests
+scripts/              export de catálogo, build del sitio, smoke
 ```
 
-The two backends implement the same domain API, so a tool never learns which
-one it is talking to, and the mock can be trusted as a contract for the live
-one.
+Los dos backends implementan la misma API de dominio, así que una tool nunca
+sabe con cuál está hablando y el mock sirve de contrato del live.
+
+---
+
+## Qué se simplificó
+
+Punto de partida: el paquete publicado `shopify-mcp` (v1.0.8), analizado con
+REA sobre el artefacto real. Tenía 14 tools, solo stdio, 6 dependencias de
+runtime, un cliente mutable a nivel de módulo, paginación por `limit` y ni
+inventario ni fulfillment.
+
+| | `shopify-mcp` 1.0.8 | aquí |
+| --- | --- | --- |
+| Transportes | stdio | MCP HTTP, REST, lote, OpenAI |
+| Dependencias de runtime | 6 | 0 |
+| Estado | singleton mutable | backend inyectado por petición |
+| Errores | excepciones GraphQL crudas | `{ code, message }` uniforme |
+| Paginación | `limit` | cursor opaco |
+| Inventario | no existía | `update_inventory` |
+| Fulfillment | no existía | `fulfill_order` |
+| Metafields | dentro de `productUpdate` (Shopify los ignora) | `metafieldsSet` |
+| Tiendas de una tienda | no | tiendan con variantes e IVA |
+| Idiomas | no | 4 |
+| IVA | no | por país, por categoría y por producto |
+| Pago | no | Stripe con webhook firmado |
+| Panel de administración | no | `/admin` |
+| Plantillas | no | 30 por industria |
+| Arranque sin tienda | no | sí, con mock |
+| Tests | ninguno | 83 |
+
+El backend live está escrito contra los docs actuales de la Admin GraphQL
+(`2026-10`, la última estable), con la directiva `@idempotent` y
+`changeFromQuantity` de los ajustes de inventario, y con las mutaciones de
+opciones correctas (`productOptionUpdate` en singular, `productOptionsDelete`
+con `options` y `strategy`). **Sin credenciales no se ha podido ejecutar
+contra una tienda real**: el camino verificado de punta a punta es el mock.
 
 ---
 

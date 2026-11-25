@@ -5,3 +5,10 @@ node_modules/
 *.log
 .DS_Store
 coverage/
+
+# Shop data written by the admin panel (categories, settings, product meta)
+data/
+
+# Uploaded product images
+public/uploads/
+dist/

@@ -165,6 +165,27 @@ export const productTools = [
           items: { type: 'string' },
           description: 'Collection ids to add the product to.',
         },
+        categoryId: {
+          type: 'string',
+          description: 'Shop category id, from list_categories.',
+        },
+        images: {
+          type: 'array',
+          description: 'Product images, in display order.',
+          items: {
+            type: 'object',
+            properties: {
+              url: { type: 'string', minLength: 1 },
+              alt: { type: 'string' },
+            },
+            required: ['url'],
+            additionalProperties: false,
+          },
+        },
+        taxRate: {
+          type: 'number',
+          description: 'VAT percentage for this product. Overrides the category and the shop default.',
+        },
       },
       required: ['title'],
       additionalProperties: false,
@@ -198,6 +219,27 @@ export const productTools = [
         redirectNewHandle: {
           type: 'boolean',
           description: 'Keep the old handle as a redirect when changing it.',
+        },
+        categoryId: {
+          type: 'string',
+          description: 'Move the product to this category, from list_categories.',
+        },
+        images: {
+          type: 'array',
+          description: 'Replace the product images, in display order.',
+          items: {
+            type: 'object',
+            properties: {
+              url: { type: 'string', minLength: 1 },
+              alt: { type: 'string' },
+            },
+            required: ['url'],
+            additionalProperties: false,
+          },
+        },
+        taxRate: {
+          type: 'number',
+          description: 'VAT percentage for this product. Overrides the category and the shop default.',
         },
       },
       required: ['id'],

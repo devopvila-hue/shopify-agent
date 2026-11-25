@@ -11,14 +11,35 @@ test('HTTP surface', async (t) => {
     assert.equal(res.status, 200);
     assert.equal(res.body.ok, true);
     assert.equal(res.body.mode, 'mock');
-    assert.equal(res.body.tools, 17);
+    assert.equal(res.body.tools, 29);
   });
 
-  await t.test('GET / serves the catalogue page', async () => {
+  await t.test('GET / serves the shop', async () => {
     const res = await call(`${base}/`);
     assert.equal(res.status, 200);
-    assert.match(String(res.body), /shopify-agent/);
+    assert.match(String(res.body), /AUR/i);
     assert.match(String(res.body), /<html/i);
+  });
+
+  await t.test('GET /tools.html serves the tool catalogue page', async () => {
+    const res = await call(`${base}/tools.html`);
+    assert.equal(res.status, 200);
+    assert.match(String(res.body), /shopify-agent/);
+  });
+
+  await t.test('GET /assets serves the static assets', async () => {
+    const css = await call(`${base}/assets/styles.css`);
+    assert.equal(css.status, 200);
+    const js = await call(`${base}/assets/app.js`);
+    assert.equal(js.status, 200);
+    const cat = await call(`${base}/assets/catalog.json`);
+    assert.equal(cat.status, 200);
+    assert.ok(cat.body.products.length > 0);
+  });
+
+  await t.test('static paths cannot escape the public folder', async () => {
+    const res = await call(`${base}/assets/../../package.json`);
+    assert.notEqual(res.status, 200);
   });
 
   await t.test('GET /info describes the service and points at the endpoints', async () => {
@@ -26,13 +47,14 @@ test('HTTP surface', async (t) => {
     assert.equal(res.status, 200);
     assert.ok(res.body.endpoints.mcp);
     assert.ok(res.body.endpoints.commands);
-    assert.ok(res.body.endpoints.catalogue);
+    assert.ok(res.body.endpoints.shop);
+    assert.ok(res.body.endpoints.toolCatalogue);
   });
 
   await t.test('GET /tools lists the catalogue with JSON Schemas', async () => {
     const res = await call(`${base}/tools`);
     assert.equal(res.status, 200);
-    assert.equal(res.body.data.length, 17);
+    assert.equal(res.body.data.length, 29);
     const tool = res.body.data.find((t2) => t2.name === 'search_products');
     assert.equal(tool.inputSchema.type, 'object');
     assert.equal(tool.readOnly, true);

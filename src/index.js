@@ -13,6 +13,9 @@ import { createRegistry } from './tools/index.js';
 import { MockBackend } from './backends/mock.js';
 import { ShopifyBackend } from './backends/shopify.js';
 import { createServer } from './server.js';
+import { ShopStore } from './store.js';
+import { StripeClient } from './stripe.js';
+import { uploadImage } from './uploads.js';
 
 export function buildApp(config = loadConfig()) {
   const problems = configProblems(config);
@@ -23,6 +26,12 @@ export function buildApp(config = loadConfig()) {
   }
 
   const registry = createRegistry();
+  const store = new ShopStore(config.dataFile);
+  const stripe = new StripeClient({
+    secretKey: config.stripeSecretKey,
+    webhookSecret: config.stripeWebhookSecret,
+  });
+
   const backend =
     config.mode === 'shopify'
       ? new ShopifyBackend({
@@ -31,16 +40,23 @@ export function buildApp(config = loadConfig()) {
           accessToken: config.accessToken,
           clientId: config.clientId,
           clientSecret: config.clientSecret,
+          store,
         })
-      : new MockBackend();
+      : new MockBackend(store);
 
-  return { config, registry, backend };
+  return {
+    config,
+    registry,
+    backend,
+    store,
+    stripe,
+    uploadImage: (args) => uploadImage(args, config),
+  };
 }
 
 export function start(config = loadConfig()) {
   const app = buildApp(config);
   const server = createServer(app);
-
   server.listen(config.port, config.host, () => {
     const base = `http://${config.host}:${config.port}`;
     const lines = [
