@@ -12,10 +12,24 @@
 
 import { createServer as createHttpServer } from 'node:http';
 import { URL } from 'node:url';
+import { readFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { toAppError, ErrorCode, unauthorized, invalidInput } from './errors.js';
 import { handleMcpMessage, mcpHttpBody, wantsEventStream, MCP_SERVER_INFO } from './mcp.js';
 
 const MAX_BODY_BYTES = 1024 * 1024;
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+/** The catalogue page. Read once, at startup. */
+function readCataloguePage() {
+  try {
+    return readFileSync(join(ROOT, 'public', 'index.html'), 'utf8');
+  } catch {
+    return null;
+  }
+}
 
 /**
  * @param {object} options
@@ -24,8 +38,9 @@ const MAX_BODY_BYTES = 1024 * 1024;
  * @param {object} options.config
  */
 export function createServer({ registry, backend, config }) {
+  const cataloguePage = readCataloguePage();
   const server = createHttpServer((req, res) => {
-    handle(req, res, { registry, backend, config }).catch((err) => {
+    handle(req, res, { registry, backend, config, cataloguePage }).catch((err) => {
       sendError(res, toAppError(err));
     });
   });
@@ -35,7 +50,7 @@ export function createServer({ registry, backend, config }) {
   return server;
 }
 
-async function handle(req, res, { registry, backend, config }) {
+async function handle(req, res, { registry, backend, config, cataloguePage }) {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const path = url.pathname.replace(/\/+$/, '') || '/';
   const method = (req.method || 'GET').toUpperCase();
@@ -58,6 +73,18 @@ async function handle(req, res, { registry, backend, config }) {
   }
 
   if (method === 'GET' && path === '/') {
+    if (cataloguePage) {
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Length': Buffer.byteLength(cataloguePage),
+        'Cache-Control': 'no-store',
+      });
+      res.end(cataloguePage);
+      return undefined;
+    }
+  }
+
+  if (method === 'GET' && path === '/info') {
     return sendJson(res, 200, {
       ok: true,
       service: MCP_SERVER_INFO.name,
@@ -67,11 +94,13 @@ async function handle(req, res, { registry, backend, config }) {
         'No chat interface, no LLM inside.',
       mode: backend.mode,
       endpoints: {
+        catalogue: 'GET /',
         tools: 'GET /tools',
         openaiTools: 'GET /tools/openai',
         callTool: 'POST /tools/{tool}',
         commands: 'POST /commands',
         mcp: 'POST /mcp',
+        info: 'GET /info',
         health: 'GET /health',
       },
     });

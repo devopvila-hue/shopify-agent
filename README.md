@@ -22,6 +22,13 @@ own agent, and the agent gets a clean, typed tool surface.
 - **One catalogue, three transports.** MCP, plain REST and OpenAI function
   definitions are generated from the same 17 tool definitions.
 
+### Look at it
+
+Open **http://127.0.0.1:8788** in a browser: a catalogue page listing all 17
+tools, their contracts, and a form to execute any of them against the mock
+store. It is a catalogue and a test console, not a chat: there is no
+conversation and no model behind it.
+
 ---
 
 ## Quick start
@@ -160,8 +167,9 @@ return modelFeedback(data);
 
 | Method | Path | What it does |
 | --- | --- | --- |
+| `GET` | `/` | Catalogue page: browse the tools and run them against the mock. |
 | `GET` | `/health` | Liveness and readiness. Always open. |
-| `GET` | `/` | Service description and the endpoint list. |
+| `GET` | `/info` | Service description and the endpoint list. |
 | `GET` | `/tools` | Full catalogue with JSON Schemas. |
 | `GET` | `/tools/openai` | The catalogue as OpenAI function definitions. |
 | `GET` | `/tools/{tool}` | One tool's schema and annotations. |
@@ -286,7 +294,9 @@ src/
   backends/
     mock.js           offline, seeded, in-memory
     shopify.js        live Admin GraphQL
-test/                 62 tests
+public/
+  index.html          the catalogue page
+test/                 63 tests
 ```
 
 The two backends implement the same domain API, so a tool never learns which

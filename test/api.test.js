@@ -14,11 +14,19 @@ test('HTTP surface', async (t) => {
     assert.equal(res.body.tools, 17);
   });
 
-  await t.test('GET / describes the service and points at the endpoints', async () => {
+  await t.test('GET / serves the catalogue page', async () => {
     const res = await call(`${base}/`);
+    assert.equal(res.status, 200);
+    assert.match(String(res.body), /shopify-agent/);
+    assert.match(String(res.body), /<html/i);
+  });
+
+  await t.test('GET /info describes the service and points at the endpoints', async () => {
+    const res = await call(`${base}/info`);
     assert.equal(res.status, 200);
     assert.ok(res.body.endpoints.mcp);
     assert.ok(res.body.endpoints.commands);
+    assert.ok(res.body.endpoints.catalogue);
   });
 
   await t.test('GET /tools lists the catalogue with JSON Schemas', async () => {
