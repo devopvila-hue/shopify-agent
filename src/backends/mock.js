@@ -1,0 +1,908 @@
+/**
+ * Offline mock backend.
+ *
+ * Implements exactly the same domain API as the live Shopify backend, over an
+ * in-memory store seeded with a deterministic catalogue. That means every tool
+ * works with no credentials and no network, and the server can be started and
+ * tested anywhere.
+ *
+ * It is not a Shopify emulator: it covers the operations this server exposes
+ * and nothing else.
+ */
+
+import { notFound, invalidInput, conflict } from '../errors.js';
+
+const DAY = 24 * 60 * 60 * 1000;
+const EPOCH = Date.parse('2026-11-01T09:00:00.000Z');
+
+let counter = 0;
+const nextId = (prefix, start = 1000) => `${prefix}${(start + counter++).toString()}`;
+
+export function gid(type, id) {
+  return `gid://shopify/${type}/${id}`;
+}
+
+/** Accepts a gid or a bare numeric id and returns the numeric part. */
+export function numericId(value) {
+  if (typeof value !== 'string') return null;
+  const match = /(\d+)\s*$/.exec(value.trim());
+  return match ? match[1] : null;
+}
+
+function seed() {
+  counter = 0;
+  const locationId = 'gid://shopify/Location/9001';
+
+  const products = [
+    {
+      id: 'gid://shopify/Product/1001',
+      title: 'Aurora Merino Sweater',
+      descriptionHtml: '<p>Soft merino wool sweater.</p>',
+      handle: 'aurora-merino-sweater',
+      status: 'ACTIVE',
+      vendor: 'Northwind',
+      productType: 'Knitwear',
+      tags: ['new', 'wool'],
+      createdAt: new Date(EPOCH - 20 * DAY).toISOString(),
+      updatedAt: new Date(EPOCH - 2 * DAY).toISOString(),
+      imageUrl: 'https://cdn.shopify.com/mock/aurora-merino-sweater.jpg',
+      variants: [
+        {
+          id: 'gid://shopify/ProductVariant/2001',
+          title: 'S',
+          price: '89.00',
+          compareAtPrice: null,
+          sku: 'AUR-S',
+          barcode: '',
+          taxable: true,
+          tracked: true,
+          inventoryItemId: 'gid://shopify/InventoryItem/3001',
+          selectedOptions: [{ name: 'Size', value: 'S' }],
+          inventory: { [locationId]: 12 },
+        },
+        {
+          id: 'gid://shopify/ProductVariant/2002',
+          title: 'M',
+          price: '89.00',
+          compareAtPrice: null,
+          sku: 'AUR-M',
+          barcode: '',
+          taxable: true,
+          tracked: true,
+          inventoryItemId: 'gid://shopify/InventoryItem/3002',
+          selectedOptions: [{ name: 'Size', value: 'M' }],
+          inventory: { [locationId]: 7 },
+        },
+        {
+          id: 'gid://shopify/ProductVariant/2003',
+          title: 'L',
+          price: '94.00',
+          compareAtPrice: null,
+          sku: 'AUR-L',
+          barcode: '',
+          taxable: true,
+          tracked: true,
+          inventoryItemId: 'gid://shopify/InventoryItem/3003',
+          selectedOptions: [{ name: 'Size', value: 'L' }],
+          inventory: { [locationId]: 0 },
+        },
+      ],
+      collections: [{ id: 'gid://shopify/Collection/5001', title: 'New arrivals' }],
+      metafields: [],
+    },
+    {
+      id: 'gid://shopify/Product/1002',
+      title: 'Ceramica Mug',
+      descriptionHtml: '<p>Hand thrown stoneware mug, 350 ml.</p>',
+      handle: 'ceramica-mug',
+      status: 'ACTIVE',
+      vendor: 'Ceramica Studio',
+      productType: 'Home',
+      tags: ['handmade'],
+      createdAt: new Date(EPOCH - 60 * DAY).toISOString(),
+      updatedAt: new Date(EPOCH - 10 * DAY).toISOString(),
+      imageUrl: 'https://cdn.shopify.com/mock/ceramica-mug.jpg',
+      variants: [
+        {
+          id: 'gid://shopify/ProductVariant/2004',
+          title: 'Default Title',
+          price: '24.00',
+          compareAtPrice: null,
+          sku: 'CER-01',
+          barcode: '',
+          taxable: true,
+          tracked: true,
+          inventoryItemId: 'gid://shopify/InventoryItem/3004',
+          selectedOptions: [{ name: 'Title', value: 'Default Title' }],
+          inventory: { [locationId]: 43 },
+        },
+      ],
+      collections: [],
+      metafields: [],
+    },
+    {
+      id: 'gid://shopify/Product/1003',
+      title: 'Alpine Daypack 22L',
+      descriptionHtml: '<p>Twenty two litre day pack.</p>',
+      handle: 'alpine-daypack-22l',
+      status: 'DRAFT',
+      vendor: 'Northwind',
+      productType: 'Bags',
+      tags: [],
+      createdAt: new Date(EPOCH - 3 * DAY).toISOString(),
+      updatedAt: new Date(EPOCH - 1 * DAY).toISOString(),
+      imageUrl: null,
+      variants: [
+        {
+          id: 'gid://shopify/ProductVariant/2005',
+          title: 'Default Title',
+          price: '145.00',
+          compareAtPrice: '175.00',
+          sku: 'ALP-22',
+          barcode: '',
+          taxable: true,
+          tracked: true,
+          inventoryItemId: 'gid://shopify/InventoryItem/3005',
+          selectedOptions: [{ name: 'Title', value: 'Default Title' }],
+          inventory: { [locationId]: 4 },
+        },
+      ],
+      collections: [],
+      metafields: [],
+    },
+  ];
+
+  const customers = [
+    {
+      id: 'gid://shopify/Customer/6001',
+      firstName: 'Marta',
+      lastName: 'Rivas',
+      email: 'marta.rivas@example.com',
+      phone: '+34 600 000 001',
+      createdAt: new Date(EPOCH - 120 * DAY).toISOString(),
+      tags: ['vip'],
+      note: 'Always ships to the Valencia warehouse.',
+      taxExempt: false,
+      numberOfOrders: 2,
+      amountSpent: { amount: '202.00', currencyCode: 'EUR' },
+      addresses: [
+        {
+          address1: 'Calle Mayor 12',
+          address2: '',
+          city: 'Valencia',
+          provinceCode: 'VC',
+          country: 'Spain',
+          zip: '46001',
+          phone: '+34 600 000 001',
+        },
+      ],
+      metafields: [],
+    },
+    {
+      id: 'gid://shopify/Customer/6002',
+      firstName: 'Jonas',
+      lastName: 'Berg',
+      email: 'jonas.berg@example.com',
+      phone: '',
+      createdAt: new Date(EPOCH - 40 * DAY).toISOString(),
+      tags: [],
+      note: '',
+      taxExempt: false,
+      numberOfOrders: 1,
+      amountSpent: { amount: '89.00', currencyCode: 'EUR' },
+      addresses: [],
+      metafields: [],
+    },
+    {
+      id: 'gid://shopify/Customer/6003',
+      firstName: 'Lucia',
+      lastName: 'Ferrer',
+      email: 'lucia.ferrer@example.com',
+      phone: '+34 600 000 003',
+      createdAt: new Date(EPOCH - 5 * DAY).toISOString(),
+      tags: ['wholesale'],
+      note: '',
+      taxExempt: true,
+      numberOfOrders: 0,
+      amountSpent: { amount: '0.00', currencyCode: 'EUR' },
+      addresses: [],
+      metafields: [],
+    },
+  ];
+
+  const orders = [
+    {
+      id: 'gid://shopify/Order/7001',
+      name: '#1001',
+      createdAt: new Date(EPOCH - 1 * DAY).toISOString(),
+      displayFinancialStatus: 'PAID',
+      displayFulfillmentStatus: 'UNFULFILLED',
+      totalPrice: { amount: '113.00', currencyCode: 'EUR' },
+      subtotalPrice: { amount: '89.00', currencyCode: 'EUR' },
+      totalShippingPrice: { amount: '4.50', currencyCode: 'EUR' },
+      totalTax: { amount: '19.50', currencyCode: 'EUR' },
+      customer: {
+        id: 'gid://shopify/Customer/6001',
+        firstName: 'Marta',
+        lastName: 'Rivas',
+        email: 'marta.rivas@example.com',
+      },
+      shippingAddress: {
+        address1: 'Calle Mayor 12',
+        address2: '',
+        city: 'Valencia',
+        provinceCode: 'VC',
+        country: 'Spain',
+        zip: '46001',
+        phone: '+34 600 000 001',
+      },
+      lineItems: [
+        {
+          id: 'gid://shopify/LineItem/8001',
+          title: 'Aurora Merino Sweater',
+          quantity: 1,
+          fulfilledQuantity: 0,
+          totalPrice: { amount: '89.00', currencyCode: 'EUR' },
+          variant: { id: 'gid://shopify/ProductVariant/2002', title: 'M', sku: 'AUR-M' },
+        },
+      ],
+      tags: ['priority'],
+      note: 'Leave with the neighbour if nobody answers.',
+      metafields: [],
+    },
+    {
+      id: 'gid://shopify/Order/7002',
+      name: '#1002',
+      createdAt: new Date(EPOCH - 4 * DAY).toISOString(),
+      displayFinancialStatus: 'PAID',
+      displayFulfillmentStatus: 'FULFILLED',
+      totalPrice: { amount: '24.00', currencyCode: 'EUR' },
+      subtotalPrice: { amount: '24.00', currencyCode: 'EUR' },
+      totalShippingPrice: { amount: '0.00', currencyCode: 'EUR' },
+      totalTax: { amount: '0.00', currencyCode: 'EUR' },
+      customer: {
+        id: 'gid://shopify/Customer/6002',
+        firstName: 'Jonas',
+        lastName: 'Berg',
+        email: 'jonas.berg@example.com',
+      },
+      shippingAddress: {
+        address1: 'Storgatan 4',
+        address2: '',
+        city: 'Stockholm',
+        provinceCode: '',
+        country: 'Sweden',
+        zip: '11122',
+        phone: '',
+      },
+      lineItems: [
+        {
+          id: 'gid://shopify/LineItem/8002',
+          title: 'Ceramica Mug',
+          quantity: 1,
+          fulfilledQuantity: 1,
+          totalPrice: { amount: '24.00', currencyCode: 'EUR' },
+          variant: { id: 'gid://shopify/ProductVariant/2004', title: 'Default Title', sku: 'CER-01' },
+        },
+      ],
+      tags: [],
+      note: '',
+      metafields: [],
+    },
+    {
+      id: 'gid://shopify/Order/7003',
+      name: '#1003',
+      createdAt: new Date(EPOCH - 9 * DAY).toISOString(),
+      displayFinancialStatus: 'REFUNDED',
+      displayFulfillmentStatus: 'CANCELLED',
+      totalPrice: { amount: '145.00', currencyCode: 'EUR' },
+      subtotalPrice: { amount: '145.00', currencyCode: 'EUR' },
+      totalShippingPrice: { amount: '0.00', currencyCode: 'EUR' },
+      totalTax: { amount: '0.00', currencyCode: 'EUR' },
+      customer: {
+        id: 'gid://shopify/Customer/6001',
+        firstName: 'Marta',
+        lastName: 'Rivas',
+        email: 'marta.rivas@example.com',
+      },
+      shippingAddress: null,
+      lineItems: [
+        {
+          id: 'gid://shopify/LineItem/8003',
+          title: 'Alpine Daypack 22L',
+          quantity: 1,
+          fulfilledQuantity: 0,
+          totalPrice: { amount: '145.00', currencyCode: 'EUR' },
+          variant: { id: 'gid://shopify/ProductVariant/2005', title: 'Default Title', sku: 'ALP-22' },
+        },
+      ],
+      tags: [],
+      note: 'Customer cancelled within the hour.',
+      metafields: [],
+    },
+  ];
+
+  return {
+    shop: { name: 'Demo Store', domain: 'demo.myshopify.com', currency: 'EUR' },
+    locations: [
+      {
+        id: locationId,
+        name: 'Valencia Warehouse',
+        address: {
+          address1: 'Carrer de la Font 3',
+          city: 'Valencia',
+          provinceCode: 'VC',
+          countryCode: 'ES',
+          zip: '46001',
+        },
+      },
+    ],
+    products,
+    customers,
+    orders,
+  };
+}
+
+/**
+ * Cursor pagination over an array. The cursor is an opaque base64 offset.
+ */
+function paginate(items, limit, cursor) {
+  const offset = decodeCursor(cursor);
+  if (offset > items.length) {
+    throw invalidInput('Invalid cursor: it points past the end of the result set.');
+  }
+  const slice = items.slice(offset, offset + limit);
+  const nextOffset = offset + slice.length;
+  const hasNextPage = nextOffset < items.length;
+  return {
+    items: slice,
+    pageInfo: {
+      hasNextPage,
+      endCursor: hasNextPage ? encodeCursor(nextOffset) : null,
+      totalCount: items.length,
+    },
+  };
+}
+
+export function encodeCursor(offset) {
+  return Buffer.from(`offset:${offset}`, 'utf8').toString('base64url');
+}
+
+export function decodeCursor(cursor) {
+  if (cursor === undefined || cursor === null || cursor === '') return 0;
+  try {
+    const decoded = Buffer.from(String(cursor), 'base64url').toString('utf8');
+    const match = /^offset:(\d+)$/.exec(decoded);
+    if (!match) throw new Error('bad cursor');
+    return Number(match[1]);
+  } catch {
+    throw invalidInput('Invalid cursor.');
+  }
+}
+
+function matches(text, term) {
+  return String(text || '').toLowerCase().includes(term);
+}
+
+function money(amount, currency) {
+  return { amount: String(amount), currencyCode: currency };
+}
+
+export class MockBackend {
+  constructor() {
+    this.mode = 'mock';
+    this.apiVersion = 'mock';
+    this.data = seed();
+    this.currency = this.data.shop.currency;
+  }
+
+  async storeInfo() {
+    return {
+      mode: this.mode,
+      shop: this.data.shop.name,
+      domain: this.data.shop.domain,
+      apiVersion: this.apiVersion,
+      currency: this.currency,
+      locationCount: this.data.locations.length,
+      productCount: this.data.products.length,
+      orderCount: this.data.orders.length,
+      customerCount: this.data.customers.length,
+      live: false,
+    };
+  }
+
+  async listLocations({ limit = 20 } = {}) {
+    return this.data.locations.slice(0, limit).map((location) => ({
+      id: location.id,
+      name: location.name,
+      address: location.address,
+    }));
+  }
+
+  // ---------------------------------------------------------------- products
+
+  async searchProducts({ query, status, limit = 20, cursor } = {}) {
+    let items = this.data.products;
+    if (query) {
+      const term = String(query).toLowerCase();
+      items = items.filter(
+        (p) => matches(p.title, term) || matches(p.vendor, term) || matches(p.productType, term) || matches(p.handle, term),
+      );
+    }
+    if (status) items = items.filter((p) => p.status === status);
+    const page = paginate(items, limit, cursor);
+    return { products: page.items.map((p) => this.#productView(p)), pageInfo: page.pageInfo };
+  }
+
+  async getProduct({ id }) {
+    const product = this.#findProduct(id);
+    if (!product) return null;
+    return this.#productView(product);
+  }
+
+  async createProduct(input) {
+    const product = {
+      id: gid('Product', nextId('p', 1100)),
+      title: input.title,
+      descriptionHtml: input.descriptionHtml || '',
+      handle: input.handle || slugify(input.title),
+      status: input.status || 'DRAFT',
+      vendor: input.vendor || '',
+      productType: input.productType || '',
+      tags: input.tags || [],
+      createdAt: new Date(EPOCH).toISOString(),
+      updatedAt: new Date(EPOCH).toISOString(),
+      imageUrl: null,
+      variants: [],
+      collections: [],
+      metafields: (input.metafields || []).map((m) => ({
+        id: gid('Metafield', nextId('m', 7000)),
+        namespace: m.namespace || 'custom',
+        key: m.key || '',
+        value: m.value,
+        type: m.type || 'single_line_text_field',
+      })),
+    };
+
+    const options = input.productOptions || [];
+    for (const option of options) {
+      const values = (option.values || []).map((v) => v.name);
+      product.variants = buildVariants(product, option.name, values, this.currency);
+    }
+    if (!product.variants.length) {
+      product.variants = buildVariants(product, 'Title', ['Default Title'], this.currency);
+    }
+    if (input.collectionsToJoin?.length) {
+      product.collections = input.collectionsToJoin.map((cid) => ({ id: cid, title: cid }));
+    }
+    this.data.products.push(product);
+    return this.#productView(product);
+  }
+
+  async updateProduct(input) {
+    const product = this.#findProduct(input.id);
+    if (!product) throw notFound(`No product with id ${input.id}`);
+
+    for (const field of ['title', 'descriptionHtml', 'handle', 'vendor', 'productType', 'status']) {
+      if (input[field] !== undefined) product[field] = input[field];
+    }
+    if (input.tags !== undefined) product.tags = input.tags;
+    if (input.seo) product.seo = input.seo;
+    if (input.metafields) {
+      product.metafields = mergeMetafields(product.metafields, input.metafields);
+    }
+    if (input.collectionsToJoin?.length) {
+      for (const cid of input.collectionsToJoin) {
+        if (!product.collections.some((c) => c.id === cid)) {
+          product.collections.push({ id: cid, title: cid });
+        }
+      }
+    }
+    if (input.collectionsToLeave?.length) {
+      product.collections = product.collections.filter((c) => !input.collectionsToLeave.includes(c.id));
+    }
+    product.updatedAt = new Date(EPOCH).toISOString();
+    return this.#productView(product);
+  }
+
+  async deleteProduct({ id }) {
+    const index = this.data.products.findIndex((p) => p.id === id || numericId(p.id) === numericId(id));
+    if (index === -1) throw notFound(`No product with id ${id}`);
+    const [removed] = this.data.products.splice(index, 1);
+    return { deletedProductId: removed.id };
+  }
+
+  async manageVariants(input) {
+    const product = this.#findProduct(input.productId);
+    if (!product) throw notFound(`No product with id ${input.productId}`);
+    const action = input.action || 'update';
+
+    if (action === 'create') {
+      for (const variant of input.variants) {
+        product.variants.push({
+          id: variant.id || gid('ProductVariant', nextId('v', 2100)),
+          title: variant.optionValues?.map((o) => o.name).join(' / ') || 'Default Title',
+          price: variant.price || '0.00',
+          compareAtPrice: variant.compareAtPrice || null,
+          sku: variant.sku || '',
+          barcode: variant.barcode || '',
+          taxable: variant.taxable !== false,
+          tracked: variant.tracked !== false,
+          inventoryItemId: gid('InventoryItem', nextId('i', 3100)),
+          selectedOptions: (variant.optionValues || []).map((o) => ({ name: o.optionName, value: o.name })),
+          inventory: {},
+        });
+      }
+    } else {
+      for (const patch of input.variants) {
+        const variant = product.variants.find((v) => v.id === patch.id);
+        if (!variant) throw notFound(`No variant with id ${patch.id} on product ${product.id}`);
+        for (const field of ['price', 'compareAtPrice', 'sku', 'barcode', 'taxable', 'tracked']) {
+          if (patch[field] !== undefined) variant[field] = patch[field];
+        }
+        if (patch.optionValues) {
+          variant.selectedOptions = patch.optionValues.map((o) => ({ name: o.optionName, value: o.name }));
+          variant.title = patch.optionValues.map((o) => o.name).join(' / ');
+        }
+      }
+    }
+    product.updatedAt = new Date(EPOCH).toISOString();
+    return { product: this.#productView(product) };
+  }
+
+  async deleteVariants({ productId, variantIds }) {
+    const product = this.#findProduct(productId);
+    if (!product) throw notFound(`No product with id ${productId}`);
+    if (!variantIds?.length) throw invalidInput('No variant ids given.');
+    const before = product.variants.length;
+    product.variants = product.variants.filter((v) => !variantIds.includes(v.id));
+    if (product.variants.length === before) {
+      throw notFound('None of the given variants belong to this product.');
+    }
+    product.updatedAt = new Date(EPOCH).toISOString();
+    return { product: this.#productView(product), deletedCount: before - product.variants.length };
+  }
+
+  async manageOptions(input) {
+    const product = this.#findProduct(input.productId);
+    if (!product) throw notFound(`No product with id ${input.productId}`);
+    const action = input.action;
+
+    if (action === 'create') {
+      const options = input.options || [];
+      if (!options.length) throw invalidInput('action "create" needs at least one option.');
+      for (const option of options) {
+        const values = option.values?.length ? option.values : [option.name];
+        product.variants = buildVariants(product, option.name, values, this.currency, product.variants);
+      }
+    } else if (action === 'update') {
+      const variant = product.variants[0];
+      if (variant && input.name) {
+        const previous = variant.selectedOptions[0]?.name;
+        variant.selectedOptions = variant.selectedOptions.map((o) =>
+          previous ? { name: input.name, value: o.value } : o,
+        );
+        variant.title = variant.selectedOptions.map((o) => o.value).join(' / ');
+      }
+    } else if (action === 'delete') {
+      product.variants = product.variants.map((v) => ({
+        ...v,
+        selectedOptions: v.selectedOptions.slice(1),
+        title: v.selectedOptions.slice(1).map((o) => o.value).join(' / ') || 'Default Title',
+      }));
+    }
+    product.updatedAt = new Date(EPOCH).toISOString();
+    return { product: this.#productView(product) };
+  }
+
+  // --------------------------------------------------------------- inventory
+
+  async updateInventory(input) {
+    const location = this.data.locations.find((l) => l.id === input.locationId);
+    if (!location) throw notFound(`No location with id ${input.locationId}`);
+
+    let variant = null;
+    if (input.variantId) {
+      for (const product of this.data.products) {
+        const found = product.variants.find((v) => v.id === input.variantId);
+        if (found) {
+          variant = found;
+          break;
+        }
+      }
+    }
+    if (!variant && input.inventoryItemId) {
+      for (const product of this.data.products) {
+        const found = product.variants.find((v) => v.inventoryItemId === input.inventoryItemId);
+        if (found) {
+          variant = found;
+          break;
+        }
+      }
+    }
+    if (!variant) throw notFound('No variant or inventory item matched the given id.');
+
+    const current = variant.inventory[location.id] ?? 0;
+    const delta = input.delta !== undefined ? input.delta : input.quantity - current;
+    const next = current + delta;
+    if (next < 0) {
+      throw conflict(`Stock would go negative (currently ${current} at ${location.name}).`);
+    }
+    variant.inventory[location.id] = next;
+
+    return {
+      changes: [
+        {
+          name: 'available',
+          inventoryItemId: variant.inventoryItemId,
+          locationId: location.id,
+          delta,
+          quantityBefore: current,
+          quantityAfterChange: next,
+        },
+      ],
+    };
+  }
+
+  // ------------------------------------------------------------------ orders
+
+  async searchOrders({ status = 'any', query, limit = 20, cursor } = {}) {
+    let items = this.data.orders;
+    if (status && status !== 'any') {
+      items = items.filter((o) => orderStatus(o) === status);
+    }
+    if (query) {
+      const term = String(query).toLowerCase();
+      items = items.filter(
+        (o) =>
+          matches(o.name, term) ||
+          matches(o.customer?.email, term) ||
+          matches(o.customer?.firstName, term) ||
+          matches(o.customer?.lastName, term) ||
+          matches(o.note, term),
+      );
+    }
+    const page = paginate(items, limit, cursor);
+    return { orders: page.items.map((o) => this.#orderView(o)), pageInfo: page.pageInfo };
+  }
+
+  async getOrder({ id }) {
+    const order = this.#findOrder(id);
+    return order ? this.#orderView(order) : null;
+  }
+
+  async updateOrder(input) {
+    const order = this.#findOrder(input.id);
+    if (!order) throw notFound(`No order with id ${input.id}`);
+    if (input.tags !== undefined) order.tags = input.tags;
+    if (input.email !== undefined) order.email = input.email;
+    if (input.note !== undefined) order.note = input.note;
+    if (input.shippingAddress !== undefined) order.shippingAddress = input.shippingAddress;
+    if (input.metafields) order.metafields = mergeMetafields(order.metafields, input.metafields);
+    return this.#orderView(order);
+  }
+
+  async fulfillOrder(input) {
+    const order = this.#findOrder(input.orderId);
+    if (!order) throw notFound(`No order with id ${input.orderId}`);
+
+    const requested = new Map(
+      (input.lineItems || []).map((item) => [item.lineItemId, item.quantity ?? 1]),
+    );
+    const shipped = [];
+
+    for (const line of order.lineItems) {
+      const remaining = line.quantity - line.fulfilledQuantity;
+      if (remaining <= 0) continue;
+      const wanted = requested.has(line.id) ? requested.get(line.id) : remaining;
+      const quantity = Math.min(wanted, remaining);
+      if (quantity <= 0) continue;
+      line.fulfilledQuantity += quantity;
+      shipped.push({ lineItemId: line.id, title: line.title, quantity });
+    }
+
+    if (!shipped.length) {
+      throw conflict('Nothing left to fulfill on this order.');
+    }
+    order.displayFulfillmentStatus = order.lineItems.every((l) => l.fulfilledQuantity >= l.quantity)
+      ? 'FULFILLED'
+      : 'PARTIALLY_FULFILLED';
+
+    return {
+      fulfillment: {
+        id: gid('Fulfillment', nextId('f', 9100)),
+        status: 'SUCCESS',
+        orderId: order.id,
+        lineItems: shipped,
+        trackingInfo: input.trackingInfo || null,
+        notifyCustomer: input.notifyCustomer !== false,
+        message: input.message || null,
+      },
+    };
+  }
+
+  // --------------------------------------------------------------- customers
+
+  async searchCustomers({ query, limit = 20, cursor } = {}) {
+    let items = this.data.customers;
+    if (query) {
+      const term = String(query).toLowerCase();
+      items = items.filter(
+        (c) =>
+          matches(c.email, term) ||
+          matches(c.firstName, term) ||
+          matches(c.lastName, term) ||
+          c.tags.some((t) => matches(t, term)),
+      );
+    }
+    const page = paginate(items, limit, cursor);
+    return { customers: page.items.map((c) => this.#customerView(c)), pageInfo: page.pageInfo };
+  }
+
+  async getCustomer({ id }) {
+    const customer = this.#findCustomer(id);
+    return customer ? this.#customerView(customer) : null;
+  }
+
+  async updateCustomer(input) {
+    const customer = this.#findCustomer(input.id);
+    if (!customer) throw notFound(`No customer with id ${input.id}`);
+    for (const field of ['firstName', 'lastName', 'email', 'phone', 'note', 'taxExempt']) {
+      if (input[field] !== undefined) customer[field] = input[field];
+    }
+    if (input.tags !== undefined) customer.tags = input.tags;
+    if (input.metafields) customer.metafields = mergeMetafields(customer.metafields, input.metafields);
+    return this.#customerView(customer);
+  }
+
+  // ----------------------------------------------------------------- helpers
+
+  #findProduct(id) {
+    return this.data.products.find(
+      (p) => p.id === id || numericId(p.id) === numericId(id),
+    );
+  }
+
+  #findOrder(id) {
+    return this.data.orders.find((o) => o.id === id || numericId(o.id) === numericId(id));
+  }
+
+  #findCustomer(id) {
+    return this.data.customers.find((c) => c.id === id || numericId(c.id) === numericId(id));
+  }
+
+  #productView(product) {
+    const variants = product.variants.map((v) => ({
+      id: v.id,
+      title: v.title,
+      price: v.price,
+      compareAtPrice: v.compareAtPrice,
+      sku: v.sku,
+      barcode: v.barcode,
+      taxable: v.taxable,
+      tracked: v.tracked,
+      inventoryItemId: v.inventoryItemId,
+      selectedOptions: v.selectedOptions,
+      inventoryQuantity: Object.values(v.inventory).reduce((sum, n) => sum + n, 0),
+      inventoryByLocation: { ...v.inventory },
+    }));
+    const prices = variants.map((v) => Number(v.price)).filter((n) => Number.isFinite(n));
+    return {
+      id: product.id,
+      title: product.title,
+      descriptionHtml: product.descriptionHtml,
+      handle: product.handle,
+      status: product.status,
+      vendor: product.vendor,
+      productType: product.productType,
+      tags: product.tags,
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt,
+      imageUrl: product.imageUrl,
+      seo: product.seo || null,
+      variants,
+      collections: product.collections,
+      metafields: product.metafields,
+      priceRange: {
+        minPrice: money(prices.length ? Math.min(...prices).toFixed(2) : '0.00', this.currency),
+        maxPrice: money(prices.length ? Math.max(...prices).toFixed(2) : '0.00', this.currency),
+      },
+      totalInventory: variants.reduce((sum, v) => sum + v.inventoryQuantity, 0),
+    };
+  }
+
+  #orderView(order) {
+    return {
+      id: order.id,
+      name: order.name,
+      createdAt: order.createdAt,
+      displayFinancialStatus: order.displayFinancialStatus,
+      displayFulfillmentStatus: order.displayFulfillmentStatus,
+      totalPrice: order.totalPrice,
+      subtotalPrice: order.subtotalPrice,
+      totalShippingPrice: order.totalShippingPrice,
+      totalTax: order.totalTax,
+      customer: order.customer,
+      shippingAddress: order.shippingAddress,
+      lineItems: order.lineItems.map((line) => ({
+        id: line.id,
+        title: line.title,
+        quantity: line.quantity,
+        fulfilledQuantity: line.fulfilledQuantity,
+        totalPrice: line.totalPrice,
+        variant: line.variant,
+      })),
+      tags: order.tags,
+      note: order.note,
+      metafields: order.metafields,
+    };
+  }
+
+  #customerView(customer) {
+    return {
+      id: customer.id,
+      firstName: customer.firstName,
+      lastName: customer.lastName,
+      email: customer.email,
+      phone: customer.phone,
+      createdAt: customer.createdAt,
+      tags: customer.tags,
+      note: customer.note,
+      taxExempt: customer.taxExempt,
+      numberOfOrders: customer.numberOfOrders,
+      amountSpent: customer.amountSpent,
+      addresses: customer.addresses,
+      metafields: customer.metafields,
+    };
+  }
+}
+
+function orderStatus(order) {
+  if (order.displayFulfillmentStatus === 'CANCELLED') return 'cancelled';
+  return order.displayFulfillmentStatus === 'FULFILLED' ? 'closed' : 'open';
+}
+
+function slugify(value) {
+  return String(value)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function buildVariants(product, optionName, values, currency, existing = []) {
+  const variants = values.map((value) => ({
+    id: gid('ProductVariant', nextId('v', 2100)),
+    title: value,
+    price: '0.00',
+    compareAtPrice: null,
+    sku: '',
+    barcode: '',
+    taxable: true,
+    tracked: true,
+    inventoryItemId: gid('InventoryItem', nextId('i', 3100)),
+    selectedOptions: [{ name: optionName, value }],
+    inventory: {},
+  }));
+  return existing.length ? [...existing, ...variants] : variants;
+}
+
+function mergeMetafields(current, incoming) {
+  const out = [...current];
+  for (const field of incoming) {
+    const index = field.id
+      ? out.findIndex((m) => m.id === field.id)
+      : out.findIndex((m) => m.key === field.key && m.namespace === (field.namespace || 'custom'));
+    const value = {
+      id: field.id || gid('Metafield', nextId('m', 7000)),
+      namespace: field.namespace || 'custom',
+      key: field.key || '',
+      value: field.value,
+      type: field.type || 'single_line_text_field',
+    };
+    if (index === -1) out.push(value);
+    else out[index] = { ...out[index], ...value };
+  }
+  return out;
+}

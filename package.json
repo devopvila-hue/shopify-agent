@@ -1,0 +1,32 @@
+{
+  "name": "shopify-agent",
+  "version": "1.0.0",
+  "description": "Agentic Shopify server. Exposes Shopify Admin operations as callable tools over MCP (Streamable HTTP) and plain HTTP. No chat UI, no LLM inside.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.10.0"
+  },
+  "main": "src/index.js",
+  "bin": {
+    "shopify-agent": "src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test",
+    "smoke": "node scripts/smoke.js"
+  },
+  "keywords": [
+    "shopify",
+    "mcp",
+    "agent",
+    "agentic",
+    "tools",
+    "graphql",
+    "ai",
+    "llm"
+  ],
+  "dependencies": {},
+  "devDependencies": {}
+}
