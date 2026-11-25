@@ -422,6 +422,8 @@ function themeSelect() {
 /* --------------------------------------------------------------- render */
 
 function renderHeader() {
+  const adminLink = $('[data-admin-link]');
+  if (adminLink) adminLink.hidden = API.base === null;
   const mode = $('#mode');
   if (mode) {
     const vat = vatRate();
@@ -934,7 +936,8 @@ async function boot() {
   const wanted =
     new URL(window.location.href).searchParams.get('theme') ||
     localStorage.getItem('aurora.theme') ||
-    injected.theme?.id;
+    injected.theme?.id ||
+    'aurora';
   const active = state.themes.find((t) => t.id === wanted) || injected.theme || state.themes[0];
   applyTheme(active);
 
@@ -942,7 +945,7 @@ async function boot() {
   await loadCatalogue();
   if (!state.themes.length && state.catalogue?.themes) {
     state.themes = state.catalogue.themes;
-    applyTheme(state.themes.find((t) => t.id === (state.theme?.id || 'aurora')) || state.themes[0]);
+    applyTheme(state.themes.find((t) => t.id === wanted) || state.themes[0]);
   }
   loadCart();
   renderHeader();
