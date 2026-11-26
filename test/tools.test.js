@@ -14,7 +14,7 @@ function harness() {
 test('the catalogue exposes the expected tools', () => {
   const { registry } = harness();
   const names = registry.list().map((t) => t.name);
-  assert.equal(names.length, 29);
+  assert.equal(names.length, 35);
   for (const expected of [
     'store_info',
     'list_locations',

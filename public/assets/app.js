@@ -396,31 +396,6 @@ function applyTheme(theme) {
   root.dataset.theme = theme.id;
 }
 
-function themeSelect() {
-  const select = $('#themeSelect');
-  if (!select || !state.themes.length) return;
-  if (!select.options.length) {
-    for (const theme of state.themes) {
-      const option = document.createElement('option');
-      option.value = theme.id;
-      option.textContent = `${theme.name} · ${theme.industry}`;
-      select.appendChild(option);
-    }
-    select.onchange = () => {
-      const theme = state.themes.find((t) => t.id === select.value);
-      applyTheme(theme);
-      localStorage.setItem('aurora.theme', theme.id);
-      localStorage.setItem('aurora.theme.default', state.shop?.theme?.id || 'aurora');
-      const url = new URL(window.location.href);
-      url.searchParams.set('theme', theme.id);
-      window.history.replaceState({}, '', url);
-      renderHeader();
-      renderHome();
-    };
-  }
-  select.value = state.theme?.id || 'aurora';
-}
-
 /* --------------------------------------------------------------- render */
 
 function renderHeader() {
@@ -432,7 +407,6 @@ function renderHeader() {
     mode.textContent = `${API.mode} · IVA ${vat}%`;
     mode.className = 'mode';
   }
-  themeSelect();
   renderCartCount();
 }
 

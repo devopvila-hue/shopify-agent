@@ -15,6 +15,7 @@
 
 import { AppError, ErrorCode, invalidInput, notFound, upstream, forbidden, conflict } from '../errors.js';
 import { vatRate } from '../tax.js';
+import { computeQuote, quoteView, discountLines } from '../quotes.js';
 
 const REFRESH_MARGIN_MS = 5 * 60 * 1000;
 
@@ -828,7 +829,38 @@ export class ShopifyBackend {
       variantId: line.variantId,
       quantity: line.quantity ?? 1,
     }));
+    // Free lines, for services that have no variant in the catalogue.
+    for (const line of input.lines || []) {
+      lineItems.push({
+        title: line.title,
+        price: Number(line.unitPrice ?? 0),
+        quantity: line.quantity ?? 1,
+      });
+    }
     if (!lineItems.length) throw invalidInput('An order needs at least one line item.');
+
+    // A discount means the lines no longer match the catalogue price, so the
+    // order is created with explicit prices instead of variant ids.
+    if (input.discount && input.discount.value) {
+      const resolved = [];
+      for (const line of lineItems) {
+        if (line.variantId) {
+          const variant = await this.#variantPrice(line.variantId);
+          if (!variant) throw notFound(`No variant with id ${line.variantId}`);
+          resolved.push({
+            title: variant.title,
+            price: variant.price,
+            quantity: line.quantity,
+          });
+        } else {
+          resolved.push(line);
+        }
+      }
+      lineItems.length = 0;
+      for (const line of discountLines(resolved, input.discount)) {
+        lineItems.push({ title: line.title, price: Number(line.unitPrice), quantity: line.quantity });
+      }
+    }
 
     const draft = {
       lineItems,
@@ -872,6 +904,164 @@ export class ShopifyBackend {
     );
 
     return orderView(completed.order);
+  }
+
+  // --------------------------------------------------------------- ofertas
+  // La oferta se guarda en nuestro store (es una propuesta comercial, no un
+  // pedido). Al aceptarla se convierte en un pedido real de Shopify.
+
+  async #variantPrice(variantId) {
+    const data = await this.graphql(
+      `
+      query VariantPrice($id: ID!) {
+        productVariant(id: $id) { id title price product { title } }
+      }
+    `,
+      { id: variantId },
+    );
+    const variant = data.productVariant;
+    if (!variant) return null;
+    return { title: variant.product?.title || variant.title, price: Number(variant.price) };
+  }
+
+  async createQuote(input) {
+    if (!this.store) throw conflict('No local store configured for quotes.');
+    const lines = input.lines || [];
+    if (!lines.length) throw invalidInput('A quote needs at least one line.');
+
+    const enriched = [];
+    for (const line of lines) {
+      if (line.variantId && line.unitPrice === undefined) {
+        const variant = await this.#variantPrice(line.variantId);
+        if (!variant) throw notFound(`No variant with id ${line.variantId}`);
+        enriched.push({ ...line, title: line.title || variant.title, unitPrice: variant.price });
+      } else {
+        enriched.push(line);
+      }
+    }
+
+    const discount = input.discount || null;
+    const totals = computeQuote({
+      lines: enriched,
+      discount,
+      taxRate: this.taxRate,
+      currency: this.settings.currency || 'EUR',
+    });
+
+    const now = new Date().toISOString();
+    const quote = this.store.createQuote({
+      status: input.status || 'DRAFT',
+      customer: input.customer || null,
+      lines: totals.lines,
+      discount,
+      discountAmount: totals.discountAmount,
+      subtotal: totals.subtotal,
+      taxRate: this.taxRate,
+      taxAmount: totals.taxAmount,
+      total: totals.total,
+      currency: totals.currency,
+      validUntil: input.validUntil || null,
+      note: input.note || '',
+      tags: input.tags || [],
+      orderId: null,
+      createdAt: now,
+      updatedAt: now,
+    });
+    return quoteView(quote);
+  }
+
+  async listQuotes({ status, customerEmail, limit = 20, cursor } = {}) {
+    if (!this.store) throw conflict('No local store configured for quotes.');
+    let items = this.store.listQuotes();
+    if (status) items = items.filter((q) => q.status === status);
+    if (customerEmail) {
+      const term = String(customerEmail).toLowerCase();
+      items = items.filter((q) => (q.customer?.email || '').toLowerCase().includes(term));
+    }
+    const offset = decodeCursor(cursor);
+    const slice = items.slice(offset, offset + limit);
+    const nextOffset = offset + slice.length;
+    return {
+      quotes: slice.map(quoteView),
+      pageInfo: {
+        hasNextPage: nextOffset < items.length,
+        endCursor: nextOffset < items.length ? encodeCursor(nextOffset) : null,
+      },
+    };
+  }
+
+  async getQuote({ id }) {
+    if (!this.store) throw conflict('No local store configured for quotes.');
+    const quote = this.store.findQuote(id);
+    return quote ? quoteView(quote) : null;
+  }
+
+  async updateQuote(input) {
+    if (!this.store) throw conflict('No local store configured for quotes.');
+    const quote = this.store.findQuote(input.id);
+    if (!quote) throw notFound(`No quote with id ${input.id}`);
+    if (quote.status === 'ACCEPTED') {
+      throw conflict('This quote was already accepted and cannot be changed.');
+    }
+    const patch = {};
+    for (const field of ['status', 'customer', 'validUntil', 'note', 'tags']) {
+      if (input[field] !== undefined) patch[field] = input[field];
+    }
+    if (input.discount !== undefined) patch.discount = input.discount;
+    if (input.lines !== undefined || input.discount !== undefined) {
+      const totals = computeQuote({
+        lines: input.lines || quote.lines,
+        discount: input.discount !== undefined ? input.discount : quote.discount,
+        taxRate: quote.taxRate ?? this.taxRate,
+        currency: quote.currency || this.settings.currency || 'EUR',
+      });
+      patch.lines = totals.lines;
+      patch.discountAmount = totals.discountAmount;
+      patch.subtotal = totals.subtotal;
+      patch.taxAmount = totals.taxAmount;
+      patch.total = totals.total;
+    }
+    patch.updatedAt = new Date().toISOString();
+    return quoteView(this.store.updateQuote(input.id, patch));
+  }
+
+  async acceptQuote(input) {
+    if (!this.store) throw conflict('No local store configured for quotes.');
+    const quote = this.store.findQuote(input.id);
+    if (!quote) throw notFound(`No quote with id ${input.id}`);
+    if (quote.status === 'ACCEPTED') throw conflict('This quote was already accepted.');
+    if (quote.status === 'DECLINED') throw conflict('A declined quote cannot be accepted.');
+
+    const order = await this.createOrder({
+      lineItems: quote.lines.filter((line) => line.variantId),
+      lines: quote.lines.filter((line) => !line.variantId),
+      discount: quote.discount,
+      customer: quote.customer,
+      shippingAddress: input.shippingAddress,
+      note: quote.note || 'Pedido desde una oferta aceptada.',
+      tags: [...(quote.tags || []), `oferta:${quote.number}`],
+      financialStatus: 'PENDING',
+    });
+
+    const updated = this.store.updateQuote(quote.id, {
+      status: 'ACCEPTED',
+      orderId: order.id,
+      updatedAt: new Date().toISOString(),
+    });
+    return { quote: quoteView(updated), order };
+  }
+
+  async declineQuote(input) {
+    if (!this.store) throw conflict('No local store configured for quotes.');
+    const quote = this.store.findQuote(input.id);
+    if (!quote) throw notFound(`No quote with id ${input.id}`);
+    if (quote.status === 'ACCEPTED') throw conflict('An accepted quote cannot be declined.');
+    const updated = this.store.updateQuote(quote.id, {
+      status: 'DECLINED',
+      note: input.reason ? `${quote.note || ''}\n${input.reason}`.trim() : quote.note,
+      updatedAt: new Date().toISOString(),
+    });
+    return { quote: quoteView(updated) };
   }
 
   async searchOrders({ status = 'any', query, limit = 20, cursor } = {}) {

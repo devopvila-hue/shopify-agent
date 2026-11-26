@@ -225,3 +225,57 @@ test('a sixth image is refused', async (t) => {
     /at most 5 items/,
   );
 });
+
+test('a quote is created, sent and accepted into a real order', async (t) => {
+  const h = harness();
+  t.after(h.cleanup);
+
+  const quote = (await h.call('create_quote', {
+    customer: { email: 'prospecto@acme.com', company: 'Acme' },
+    lines: [
+      { variantId: 'gid://shopify/ProductVariant/2001', quantity: 3 },
+      { title: 'Automatización de altas', quantity: 1, unitPrice: '2400.00' },
+    ],
+    discount: { type: 'percent', value: 10 },
+  })).quote;
+
+  assert.equal(quote.status, 'DRAFT');
+  assert.equal(quote.lines.length, 2);
+  // the catalogue line takes its price from the variant
+  assert.equal(quote.lines[0].unitPrice, '89.00');
+  assert.equal(quote.subtotal, 2667);
+  assert.equal(quote.discountAmount, 266.7);
+  assert.equal(quote.taxAmount, 504.06);
+  assert.equal(quote.total, 2904.36);
+
+  const sent = (await h.call('update_quote', { id: quote.id, status: 'SENT' })).quote;
+  assert.equal(sent.status, 'SENT');
+
+  const listed = await h.call('list_quotes', { status: 'SENT' });
+  assert.equal(listed.quotes.length, 1);
+
+  const accepted = await h.call('accept_quote', { id: quote.id, confirm: true });
+  assert.equal(accepted.quote.status, 'ACCEPTED');
+  assert.ok(accepted.quote.orderId);
+  assert.equal(accepted.order.lineItems.length, 2);
+  // the order total is the quoted total, discount included
+  assert.equal(Number(accepted.order.totalPrice.amount), quote.total);
+
+  await assert.rejects(() => h.call('accept_quote', { id: quote.id, confirm: true }), /already accepted/);
+});
+
+test('accepting a quote needs the confirmation', async (t) => {
+  const h = harness();
+  t.after(h.cleanup);
+  const quote = (await h.call('create_quote', { lines: [{ title: 'x', quantity: 1, unitPrice: '10' }] })).quote;
+  await assert.rejects(() => h.call('accept_quote', { id: quote.id, confirm: false }), /requires confirm: true/);
+});
+
+test('a quote can be declined and keeps the reason', async (t) => {
+  const h = harness();
+  t.after(h.cleanup);
+  const quote = (await h.call('create_quote', { lines: [{ title: 'x', quantity: 1, unitPrice: '10' }] })).quote;
+  const declined = (await h.call('decline_quote', { id: quote.id, reason: 'muy caro' })).quote;
+  assert.equal(declined.status, 'DECLINED');
+  assert.match(declined.note, /muy caro/);
+});

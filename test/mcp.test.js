@@ -44,7 +44,7 @@ test('MCP over Streamable HTTP', async (t) => {
   await t.test('tools/list returns every tool with a JSON Schema', async () => {
     const res = await mcp(base, { jsonrpc: '2.0', id: 4, method: 'tools/list' });
     const tools = res.body.result.tools;
-    assert.equal(tools.length, 29);
+    assert.equal(tools.length, 35);
     const product = tools.find((t2) => t2.name === 'search_products');
     assert.equal(product.inputSchema.type, 'object');
     assert.equal(product.annotations.readOnlyHint, true);

@@ -16,7 +16,7 @@ const LOCALE_NAMES = { en: 'English', es: 'Español', ro: 'Română', hu: 'Magya
 
 const I18N = {
   en: {
-    'nav.design': 'Design', 'design.title': 'Design templates', 'design.hint': 'Thirty templates, one per industry. The active one is applied to the shop.', 'design.apply': 'Use this template', 'design.active': 'In use', 'design.industry': 'Industry',
+    'nav.design': 'Design', 'design.title': 'Design templates', 'design.hint': 'Thirty templates, one per industry. The active one is applied to the shop.', 'design.apply': 'Use this template', 'design.active': 'In use', 'design.industry': 'Industry', 'design.preview': 'See it in the shop',
     'nav.dashboard': 'Dashboard', 'nav.products': 'Products', 'nav.categories': 'Categories',
     'nav.orders': 'Orders', 'nav.settings': 'Settings', 'nav.shop': 'View the shop',
     'nav.tools': 'Tools API',
@@ -58,7 +58,7 @@ const I18N = {
     'common.total': 'Total', 'common.free': 'Free', 'common.units': 'units',
   },
   es: {
-    'nav.design': 'Diseño', 'design.title': 'Plantillas de diseño', 'design.hint': 'Treinta plantillas, una por industria. La activa se aplica a la tienda.', 'design.apply': 'Usar esta plantilla', 'design.active': 'En uso', 'design.industry': 'Industria',
+    'nav.design': 'Diseño', 'design.title': 'Plantillas de diseño', 'design.hint': 'Treinta plantillas, una por industria. La activa se aplica a la tienda.', 'design.apply': 'Usar esta plantilla', 'design.active': 'En uso', 'design.industry': 'Industria', 'design.preview': 'Verla en la tienda',
     'nav.dashboard': 'Panel', 'nav.products': 'Productos', 'nav.categories': 'Categorías',
     'nav.orders': 'Pedidos', 'nav.settings': 'Ajustes', 'nav.shop': 'Ver la tienda',
     'nav.tools': 'API de tools',
@@ -96,7 +96,7 @@ const I18N = {
     'common.total': 'Total', 'common.free': 'Gratis', 'common.units': 'unidades',
   },
   ro: {
-    'nav.design': 'Design', 'design.title': 'Șabloane de design', 'design.hint': 'Treize șabloane, unul pentru fiecare industrie. Cel activ se aplică magazinului.', 'design.apply': 'Folosește acest șablon', 'design.active': 'În uz', 'design.industry': 'Industrie',
+    'nav.design': 'Design', 'design.title': 'Șabloane de design', 'design.hint': 'Treize șabloane, unul pentru fiecare industrie. Cel activ se aplică magazinului.', 'design.apply': 'Folosește acest șablon', 'design.active': 'În uz', 'design.industry': 'Industrie', 'design.preview': 'Vezi-l în magazin',
     'nav.dashboard': 'Panou', 'nav.products': 'Produse', 'nav.categories': 'Categorii',
     'nav.orders': 'Comenzi', 'nav.settings': 'Setări', 'nav.shop': 'Vezi magazinul',
     'nav.tools': 'API tools',
@@ -134,7 +134,7 @@ const I18N = {
     'common.total': 'Total', 'common.free': 'Gratis', 'common.units': 'bucăți',
   },
   hu: {
-    'nav.design': 'Design', 'design.title': 'Design sablonok', 'design.hint': 'Harminc sablon, mindegyik iparágra egy. Az aktív az üzletre kerül.', 'design.apply': 'Sablon használata', 'design.active': 'Aktív', 'design.industry': 'Iparág',
+    'nav.design': 'Design', 'design.title': 'Design sablonok', 'design.hint': 'Harminc sablon, mindegyik iparágra egy. Az aktív az üzletre kerül.', 'design.apply': 'Sablon használata', 'design.active': 'Aktív', 'design.industry': 'Iparág', 'design.preview': 'Megnézés az üzletben',
     'nav.dashboard': 'Áttekintés', 'nav.products': 'Termékek', 'nav.categories': 'Kategóriák',
     'nav.orders': 'Rendelések', 'nav.settings': 'Beállítások', 'nav.shop': 'Üzlet megtekintése',
     'nav.tools': 'Tools API',

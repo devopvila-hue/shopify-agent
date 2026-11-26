@@ -70,6 +70,22 @@ export const orderTools = [
             additionalProperties: false,
           },
         },
+        lines: {
+          type: 'array',
+          description:
+            'Free lines for things with no catalogue variant, such as services or custom work. ' +
+            'Use this instead of lineItems for a job that is not a product.',
+          items: {
+            type: 'object',
+            properties: {
+              title: { type: 'string', minLength: 1, description: 'Line description.' },
+              quantity: { type: 'integer', minimum: 1, default: 1 },
+              unitPrice: { type: 'string', description: 'Price per unit, tax excluded, e.g. "2400.00".' },
+            },
+            required: ['title'],
+            additionalProperties: false,
+          },
+        },
         customer: {
           type: 'object',
           description: 'Who is buying.',

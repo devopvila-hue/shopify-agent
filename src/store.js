@@ -32,6 +32,7 @@ const DEFAULTS = {
   },
   categories: [],
   products: {},
+  quotes: [],
 };
 
 export class ShopStore {
@@ -52,6 +53,7 @@ export class ShopStore {
         settings: { ...DEFAULTS.settings, ...(parsed.settings || {}) },
         categories: parsed.categories || [],
         products: parsed.products || {},
+        quotes: parsed.quotes || [],
       };
     } catch {
       this.data = structuredClone(DEFAULTS);
@@ -192,6 +194,42 @@ export class ShopStore {
     if (meta?.images?.length) return meta.images;
     if (product.imageUrl) return [{ url: product.imageUrl, alt: product.title }];
     return [];
+  }
+
+  // -------------------------------------------------------------- ofertas
+
+  listQuotes() {
+    return [...this.data.quotes].sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  }
+
+  findQuote(id) {
+    return this.data.quotes.find((q) => q.id === id || q.number === id);
+  }
+
+  createQuote(quote) {
+    const number = `OF-${new Date().getFullYear()}-${String(this.data.quotes.length + 1).padStart(4, '0')}`;
+    const created = { id: `quo_${randomUUID().slice(0, 8)}`, number, ...quote };
+    this.data.quotes.push(created);
+    this.save();
+    return created;
+  }
+
+  updateQuote(id, patch) {
+    const quote = this.findQuote(id);
+    if (!quote) return null;
+    for (const [key, value] of Object.entries(patch)) {
+      if (value !== undefined) quote[key] = value;
+    }
+    this.save();
+    return quote;
+  }
+
+  deleteQuote(id) {
+    const index = this.data.quotes.findIndex((q) => q.id === id);
+    if (index === -1) return null;
+    const [removed] = this.data.quotes.splice(index, 1);
+    this.save();
+    return removed;
   }
 }
 
