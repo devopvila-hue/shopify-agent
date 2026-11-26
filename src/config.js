@@ -92,6 +92,7 @@ export function loadConfig(env = process.env) {
     apiKey: (get('AGENT_API_KEY') || '').trim(),
     requireAuth: (get('SHOPIFY_REQUIRE_AUTH') || '').toLowerCase() === 'true',
     dataFile: (get('SHOP_DATA_FILE') || join(ROOT, 'data', 'shop.json')).trim(),
+    filesDir: (get('SHOP_FILES_DIR') || join(ROOT, 'data', 'files')).trim(),
     stripeSecretKey: (get('STRIPE_SECRET_KEY') || '').trim(),
     stripeWebhookSecret: (get('STRIPE_WEBHOOK_SECRET') || '').trim(),
     adminPassword: (get('ADMIN_PASSWORD') || '').trim(),

@@ -270,3 +270,6 @@ html[data-caps="off"] .eyebrow { font-size: 12px; }
 
 html[data-card="plain"] .card .shot svg { border-radius: 0; }
 html[data-card="solid"] .card .shot svg { border-radius: var(--radius); }
+
+.downloads { display: grid; gap: 8px; justify-items: center; margin-bottom: 20px; }
+.downloads .dtitle { font: 11px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }

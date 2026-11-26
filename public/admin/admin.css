@@ -241,3 +241,22 @@ tbody tr:hover { background: #fbfaf6; }
 .swatches i { width: 26px; height: 26px; border-radius: 7px; border: 1px solid rgba(0,0,0,.12); }
 .theme .tname { font-family: var(--display); font-weight: 600; font-size: 14px; }
 .theme .tind { font: 11px var(--mono); color: var(--muted); }
+
+/* --------------------------------------------------------------- ofertas */
+.q-line { display: grid; grid-template-columns: 1fr 70px 110px 28px; gap: 6px; margin-bottom: 6px; align-items: center; }
+.q-line input { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: 13px var(--body); width: 100%; }
+.q-line .rm { border: 1px solid var(--line); background: var(--surface); border-radius: 7px; width: 28px; height: 32px; color: var(--muted); }
+.q-line .rm:hover { border-color: var(--clay); color: var(--clay); }
+
+/* -------------------------------------------------------------- importar */
+.imports { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.importer { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+.importer h3 { font-size: 15px; margin: 0 0 14px; }
+.importer .form { max-width: none; gap: 11px; }
+.importer-out { font-size: 12.5px; margin-top: 6px; }
+.importer-out.err { color: var(--clay); }
+.importer-out .ok { color: var(--green); }
+.importer-out .warn { color: var(--clay); }
+.importer-details { margin-top: 6px; color: var(--muted); font: 11.5px var(--mono); }
+.importer-report table { margin-top: 8px; }
+.importer-report td { padding: 5px 8px; }

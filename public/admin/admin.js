@@ -18,7 +18,7 @@ const I18N = {
   en: {
     'nav.design': 'Design', 'design.title': 'Design templates', 'design.hint': 'Thirty templates, one per industry. The active one is applied to the shop.', 'design.apply': 'Use this template', 'design.active': 'In use', 'design.industry': 'Industry', 'design.preview': 'See it in the shop',
     'nav.dashboard': 'Dashboard', 'nav.products': 'Products', 'nav.categories': 'Categories',
-    'nav.orders': 'Orders', 'nav.settings': 'Settings', 'nav.shop': 'View the shop',
+    'nav.orders': 'Orders', 'nav.settings': 'Settings', 'nav.shop': 'View the shop', 'nav.quotes': 'Quotes', 'nav.import': 'Import', 'imp.title': 'Import catalogue', 'imp.hint': 'Bring products in from another platform. Importing the same product again updates it.', 'imp.test': 'Test connection', 'imp.run': 'Import', 'imp.dryRun': 'Dry run first', 'imp.working': 'Working…', 'imp.ok': 'The connection works', 'imp.done': 'Import finished', 'imp.empty': 'No imports yet.', 'quote.title': 'Quotes', 'quote.new': 'New quote', 'quote.empty': 'No quotes yet.', 'quote.accept': 'Accept', 'quote.decline': 'Decline', 'quote.accepted': 'Quote accepted, order created.', 'quote.customer': 'Customer', 'quote.lines': 'Lines', 'quote.total': 'Total', 'quote.validUntil': 'Valid until', 'quote.addLine': 'Add line', 'quote.titleField': 'Description', 'quote.price': 'Unit price', 'quote.discount': 'Discount %',
     'nav.tools': 'Tools API',
     'dash.revenue': 'Revenue', 'dash.orders': 'Orders', 'dash.products': 'Products',
     'dash.lowStock': 'Low stock', 'dash.recent': 'Recent orders', 'dash.noOrders': 'No orders yet.',
@@ -49,10 +49,10 @@ const I18N = {
     'set.notConnected': 'Not configured', 'set.stripeHint': 'Set STRIPE_SECRET_KEY to enable card payments.',
     'set.api': 'Tools API', 'set.apiHint': 'Every action in this panel is also a tool for AI agents.',
     'set.saved': 'Settings saved.', 'set.language': 'Panel language',
-    'prod.noImage': 'No image', 'prod.setMain': 'Show this one in the shop', 'prod.imageHint': 'Up to five. The starred one is the one the shop shows.', 'prod.tooManyImages': 'Five images is the limit.',
-    'prod.noImage': 'Sin imagen', 'prod.setMain': 'Mostrar esta en la tienda', 'prod.imageHint': 'Hasta cinco. La marcada con estrella es la que se ve en la tienda.', 'prod.tooManyImages': 'El límite son cinco imágenes.',
-    'prod.noImage': 'Fără imagine', 'prod.setMain': 'Arată asta în magazin', 'prod.imageHint': 'Până la cinci. Cea cu steaua este cea afișată în magazin.', 'prod.tooManyImages': 'Limita este de cinci imagini.',
-    'prod.noImage': 'Nincs kép', 'prod.setMain': 'Ez legyen a kirakatban', 'prod.imageHint': 'Legfelj öt. A csillagozott látható az üzletben.', 'prod.tooManyImages': 'A limit öt kép.',
+    'prod.noImage': 'No image', 'prod.setMain': 'Show this one in the shop', 'prod.imageHint': 'Up to five. The starred one is the one the shop shows.', 'prod.tooManyImages': 'Five images is the limit.', 'prod.digital': 'Digital product', 'prod.digitalHint': 'It is a file the customer downloads, not a parcel.', 'prod.attachFile': 'Attach the file', 'prod.saveFirst': 'Save the product before attaching a file.',
+    'prod.noImage': 'Sin imagen', 'prod.setMain': 'Mostrar esta en la tienda', 'prod.imageHint': 'Hasta cinco. La marcada con estrella es la que se ve en la tienda.', 'prod.tooManyImages': 'El límite son cinco imágenes.', 'prod.digital': 'Producto digital', 'prod.digitalHint': 'Es un fichero que se descarga, no un paquete que se envía.', 'prod.attachFile': 'Adjuntar el fichero', 'prod.saveFirst': 'Guarda el producto antes de adjuntar un fichero.',
+    'prod.noImage': 'Fără imagine', 'prod.setMain': 'Arată asta în magazin', 'prod.imageHint': 'Până la cinci. Cea cu steaua este cea afișată în magazin.', 'prod.tooManyImages': 'Limita este de cinci imagini.', 'prod.digital': 'Produs digital', 'prod.digitalHint': 'Este un fișier pe care clientul îl descarcă, nu un colet.', 'prod.attachFile': 'Atașează fișierul', 'prod.saveFirst': 'Salvează produsul înainte de a atașa un fișier.',
+    'prod.noImage': 'Nincs kép', 'prod.setMain': 'Ez legyen a kirakatban', 'prod.imageHint': 'Legfelj öt. A csillagozott látható az üzletben.', 'prod.tooManyImages': 'A limit öt kép.', 'prod.digital': 'Digitális termék', 'prod.digitalHint': 'Ez egy fájl, amit a vevő letölt, nem egy csomag.', 'prod.attachFile': 'Fájl csatolása', 'prod.saveFirst': 'Mentsd el a terméket, mielőtt fájlt csatolnál.',
     'common.save': 'Save', 'common.cancel': 'Cancel', 'common.close': 'Close', 'common.loading': 'Loading…',
     'common.error': 'Something went wrong', 'common.actions': 'Actions', 'common.name': 'Name',
     'common.total': 'Total', 'common.free': 'Free', 'common.units': 'units',
@@ -60,7 +60,7 @@ const I18N = {
   es: {
     'nav.design': 'Diseño', 'design.title': 'Plantillas de diseño', 'design.hint': 'Treinta plantillas, una por industria. La activa se aplica a la tienda.', 'design.apply': 'Usar esta plantilla', 'design.active': 'En uso', 'design.industry': 'Industria', 'design.preview': 'Verla en la tienda',
     'nav.dashboard': 'Panel', 'nav.products': 'Productos', 'nav.categories': 'Categorías',
-    'nav.orders': 'Pedidos', 'nav.settings': 'Ajustes', 'nav.shop': 'Ver la tienda',
+    'nav.orders': 'Pedidos', 'nav.settings': 'Ajustes', 'nav.shop': 'Ver la tienda', 'nav.quotes': 'Presupuestos', 'nav.import': 'Importar', 'imp.title': 'Importar catálogo', 'imp.hint': 'Trae productos de otra plataforma. Al reimportar el mismo producto se actualiza.', 'imp.test': 'Probar conexión', 'imp.run': 'Importar', 'imp.dryRun': 'Simular primero', 'imp.working': 'Trabajando…', 'imp.ok': 'La conexión funciona', 'imp.done': 'Importación terminada', 'imp.empty': 'Todavía no hay importaciones.', 'quote.title': 'Presupuestos', 'quote.new': 'Nuevo presupuesto', 'quote.empty': 'Todavía no hay presupuestos.', 'quote.accept': 'Aceptar', 'quote.decline': 'Rechazar', 'quote.accepted': 'Presupuesto aceptado, pedido creado.', 'quote.customer': 'Cliente', 'quote.lines': 'Líneas', 'quote.total': 'Total', 'quote.validUntil': 'Válido hasta', 'quote.addLine': 'Añadir línea', 'quote.titleField': 'Descripción', 'quote.price': 'Precio unitario', 'quote.discount': 'Descuento %',
     'nav.tools': 'API de tools',
     'dash.revenue': 'Ingresos', 'dash.orders': 'Pedidos', 'dash.products': 'Productos',
     'dash.lowStock': 'Stock bajo', 'dash.recent': 'Últimos pedidos', 'dash.noOrders': 'Todavía no hay pedidos.',
@@ -98,7 +98,7 @@ const I18N = {
   ro: {
     'nav.design': 'Design', 'design.title': 'Șabloane de design', 'design.hint': 'Treize șabloane, unul pentru fiecare industrie. Cel activ se aplică magazinului.', 'design.apply': 'Folosește acest șablon', 'design.active': 'În uz', 'design.industry': 'Industrie', 'design.preview': 'Vezi-l în magazin',
     'nav.dashboard': 'Panou', 'nav.products': 'Produse', 'nav.categories': 'Categorii',
-    'nav.orders': 'Comenzi', 'nav.settings': 'Setări', 'nav.shop': 'Vezi magazinul',
+    'nav.orders': 'Comenzi', 'nav.settings': 'Setări', 'nav.shop': 'Vezi magazinul', 'nav.quotes': 'Oferte', 'nav.import': 'Import', 'imp.title': 'Importă catalogul', 'imp.hint': 'Adu produse din altă platformă. Reimportarea actualizează produsul.', 'imp.test': 'Testează conexiunea', 'imp.run': 'Importă', 'imp.dryRun': 'Simulează întâi', 'imp.working': 'Se lucrează…', 'imp.ok': 'Conexiunea funcționează', 'imp.done': 'Import încheiat', 'imp.empty': 'Încă nu există importuri.', 'quote.title': 'Oferte', 'quote.new': 'Ofertă nouă', 'quote.empty': 'Încă nu există oferte.', 'quote.accept': 'Acceptă', 'quote.decline': 'Respinge', 'quote.accepted': 'Ofertă acceptată, comandă creată.', 'quote.customer': 'Client', 'quote.lines': 'Linii', 'quote.total': 'Total', 'quote.validUntil': 'Valabil până la', 'quote.addLine': 'Adaugă linie', 'quote.titleField': 'Descriere', 'quote.price': 'Preț unitar', 'quote.discount': 'Reducere %',
     'nav.tools': 'API tools',
     'dash.revenue': 'Venit', 'dash.orders': 'Comenzi', 'dash.products': 'Produse',
     'dash.lowStock': 'Stoc redus', 'dash.recent': 'Ultimele comenzi', 'dash.noOrders': 'Încă nu există comenzi.',
@@ -136,7 +136,7 @@ const I18N = {
   hu: {
     'nav.design': 'Design', 'design.title': 'Design sablonok', 'design.hint': 'Harminc sablon, mindegyik iparágra egy. Az aktív az üzletre kerül.', 'design.apply': 'Sablon használata', 'design.active': 'Aktív', 'design.industry': 'Iparág', 'design.preview': 'Megnézés az üzletben',
     'nav.dashboard': 'Áttekintés', 'nav.products': 'Termékek', 'nav.categories': 'Kategóriák',
-    'nav.orders': 'Rendelések', 'nav.settings': 'Beállítások', 'nav.shop': 'Üzlet megtekintése',
+    'nav.orders': 'Rendelések', 'nav.settings': 'Beállítások', 'nav.shop': 'Üzlet megtekintése', 'nav.quotes': 'Ajánlatok', 'nav.import': 'Import', 'imp.title': 'Katalógus import', 'imp.hint': 'Termékek más platformról. Újraimportáláskor frissül a termék.', 'imp.test': 'Kapcsolat teszt', 'imp.run': 'Importálás', 'imp.dryRun': 'Előbb szimulálás', 'imp.working': 'Dolgozom…', 'imp.ok': 'A kapcsolat működik', 'imp.done': 'Import kész', 'imp.empty': 'Még nincs import.', 'quote.title': 'Ajánlatok', 'quote.new': 'Új ajánlat', 'quote.empty': 'Még nincsenek ajánlatok.', 'quote.accept': 'Elfogadás', 'quote.decline': 'Elutasítás', 'quote.accepted': 'Ajánlat elfogadva, rendelés létrehozva.', 'quote.customer': 'Vevő', 'quote.lines': 'Tételek', 'quote.total': 'Összesen', 'quote.validUntil': 'Érvényes eddig', 'quote.addLine': 'Tétel hozzáadása', 'quote.titleField': 'Leírás', 'quote.price': 'Egységár', 'quote.discount': 'Kedvezmény %',
     'nav.tools': 'Tools API',
     'dash.revenue': 'Bevétel', 'dash.orders': 'Rendelések', 'dash.products': 'Termékek',
     'dash.lowStock': 'Kevés készlet', 'dash.recent': 'Legutóbbi rendelések', 'dash.noOrders': 'Még nincsenek rendelések.',
@@ -273,6 +273,8 @@ const SECTIONS = [
   { id: 'orders', label: 'nav.orders' },
   { id: 'settings', label: 'nav.settings' },
   { id: 'design', label: 'nav.design' },
+  { id: 'quotes', label: 'nav.quotes' },
+  { id: 'import', label: 'nav.import' },
 ];
 
 function renderNav() {
@@ -307,6 +309,8 @@ async function renderSection() {
     else if (state.section === 'orders') await renderOrders(content);
     else if (state.section === 'settings') await renderSettings(content);
     else if (state.section === 'design') await renderDesign(content);
+    else if (state.section === 'quotes') await renderQuotes(content);
+    else if (state.section === 'import') await renderImport(content);
   } catch (err) {
     content.innerHTML = `<div class="err-box">${esc(err.message)}</div>`;
   }
@@ -457,6 +461,18 @@ async function editProduct(id) {
         </div>
       </div>
 
+      <div class="field"><label>${esc(t('prod.digital'))}</label>
+        <label class="switch">
+          <input type="checkbox" id="fDigital" ${product?.digital ? 'checked' : ''}>
+          ${esc(t('prod.digitalHint'))}
+        </label>
+        <div id="digitalFiles" class="imgs" style="margin-top:10px"></div>
+        <label class="btn sm" style="cursor:pointer;margin-top:10px;display:inline-flex">
+          ${esc(t('prod.attachFile'))}
+          <input type="file" id="digitalFile" accept=".pdf,.zip,.epub,.doc,.docx,.xlsx,.pptx,.png,.jpg,.txt,.csv" hidden>
+        </label>
+      </div>
+
       ${
         product?.variants?.length
           ? `<div class="field"><label>${esc(t('prod.variants'))}</label>
@@ -570,6 +586,59 @@ async function editProduct(id) {
     }
   };
 
+  const drawFiles = (files) => {
+    const box = $('#digitalFiles');
+    if (!box) return;
+    box.innerHTML = files.length
+      ? files.map((f) => `<div class="img-cell"><div class="img-view" style="aspect-ratio:auto;padding:8px">
+          <span class="img-empty">${esc(f.filename)}<br>${Math.round(f.bytes / 1024)} KB</span>
+        </div></div>`).join('')
+      : '';
+  };
+
+  if (product) {
+    try {
+      const data = await api('list_digital_files', { productId: product.id });
+      drawFiles(data.files || []);
+    } catch {
+      drawFiles([]);
+    }
+  } else {
+    drawFiles([]);
+  }
+
+  const fileInput = $('#digitalFile');
+  if (fileInput) {
+    fileInput.onchange = async (event) => {
+      const file = event.target.files?.[0];
+      event.target.value = '';
+      if (!file) return;
+      if (!product) {
+        toast(t('prod.saveFirst'), true);
+        return;
+      }
+      try {
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result).split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        await api('attach_digital_file', {
+          productId: product.id,
+          filename: file.name,
+          contentBase64: base64,
+          mimeType: file.type || 'application/octet-stream',
+        });
+        const data = await api('list_digital_files', { productId: product.id });
+        drawFiles(data.files || []);
+        toast(t('prod.saved'));
+      } catch (err) {
+        toast(err.message, true);
+      }
+    };
+  }
+
   $('#cancelBtn').onclick = closePanel;
 
   $('#saveBtn').onclick = async () => {
@@ -593,6 +662,7 @@ async function editProduct(id) {
       };
       const tax = $('#fTax').value.trim();
       if (tax !== '') payload.taxRate = Number(tax);
+      payload.isDigital = $('#fDigital').checked;
 
       if (product) {
         const price = $('#fPrice').value.trim();
@@ -928,6 +998,269 @@ async function renderDesign(content) {
       }
     };
   });
+}
+
+/* --------------------------------------------------------------- ofertas */
+
+async function renderQuotes(content) {
+  const data = await api('list_quotes', { limit: 50 });
+  const quotes = data.quotes || [];
+
+  content.innerHTML = `
+    <div class="toolbar">
+      <button class="btn primary" id="newQuote">${esc(t('quote.new'))}</button>
+      <span class="muted">${quotes.length}</span>
+    </div>
+    ${
+      quotes.length
+        ? `<table><thead><tr>
+            <th>#</th><th>${esc(t('quote.customer'))}</th><th>${esc(t('quote.lines'))}</th>
+            <th>${esc(t('ord.date'))}</th><th class="num">${esc(t('quote.total'))}</th>
+            <th>${esc(t('common.actions'))}</th></tr></thead>
+           <tbody>${quotes.map((q) => `<tr>
+             <td><strong>${esc(q.number)}</strong><br><span class="pill-tag ${q.status === 'ACCEPTED' ? 'ok' : q.status === 'DECLINED' ? 'warn' : ''}">${esc(q.status)}</span></td>
+             <td>${esc(q.customer?.email || '—')}<br><span class="muted">${esc(q.customer?.company || '')}</span></td>
+             <td>${q.lines.length}</td>
+             <td>${esc(new Date(q.createdAt).toLocaleDateString(state.locale))}</td>
+             <td class="num">${esc(money(q.total, q.currency))}</td>
+             <td>${
+               q.status !== 'ACCEPTED' && q.status !== 'DECLINED'
+                 ? `<button class="link" data-accept="${esc(q.id)}">${esc(t('quote.accept'))}</button>
+                    <button class="link" style="color:var(--clay)" data-decline="${esc(q.id)}">${esc(t('quote.decline'))}</button>`
+                 : ''
+             }</td></tr>`).join('')}</tbody></table>`
+        : `<div class="empty">${esc(t('quote.empty'))}</div>`
+    }`;
+
+  $('#newQuote').onclick = () => editQuote();
+  $$('[data-accept]').forEach((button) => {
+    button.onclick = async () => {
+      try {
+        const result = await api('accept_quote', { id: button.dataset.accept, confirm: true });
+        toast(`${t('quote.accepted')} ${result.order?.name || ''}`);
+        renderSection();
+      } catch (err) {
+        toast(err.message, true);
+      }
+    };
+  });
+  $$('[data-decline]').forEach((button) => {
+    button.onclick = async () => {
+      try {
+        await api('decline_quote', { id: button.dataset.decline });
+        toast(t('ord.marked'));
+        renderSection();
+      } catch (err) {
+        toast(err.message, true);
+      }
+    };
+  });
+}
+
+function editQuote() {
+  const lines = [{ title: '', quantity: 1, unitPrice: '' }];
+
+  const draw = () => `
+    <div class="form">
+      <div class="row2">
+        <div class="field"><label>${esc(t('quote.customer'))}</label>
+          <input id="qEmail" type="email" placeholder="cliente@empresa.com"></div>
+        <div class="field"><label>${esc(t('quote.customer'))}</label>
+          <input id="qCompany" placeholder="Empresa"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>${esc(t('checkout.firstName'))}</label><input id="qFirst"></div>
+        <div class="field"><label>${esc(t('checkout.lastName'))}</label><input id="qLast"></div>
+      </div>
+      <div class="field"><label>${esc(t('quote.lines'))}</label>
+        <div id="qLines">
+          ${lines.map((line, i) => `<div class="q-line" data-line="${i}">
+            <input data-f="title" value="${esc(line.title)}" placeholder="${esc(t('quote.titleField'))}">
+            <input data-f="quantity" type="number" min="1" value="${line.quantity}">
+            <input data-f="unitPrice" value="${esc(line.unitPrice)}" placeholder="${esc(t('quote.price'))}">
+            <button class="rm" data-rm="${i}">×</button>
+          </div>`).join('')}
+        </div>
+        <button class="btn sm" id="qAddLine" style="margin-top:8px">${esc(t('quote.addLine'))}</button>
+      </div>
+      <div class="row2">
+        <div class="field"><label>${esc(t('quote.discount'))}</label><input id="qDiscount" type="number" min="0" value="0"></div>
+        <div class="field"><label>${esc(t('quote.validUntil'))}</label><input id="qValid" type="date"></div>
+      </div>
+      <div class="field"><label>${esc(t('product.fieldDescription'))}</label><textarea id="qNote"></textarea></div>
+    </div>`;
+
+  openPanel(t('quote.new'), draw(),
+    `<button class="btn" id="cancelBtn">${esc(t('common.cancel'))}</button>
+     <button class="btn primary" id="saveBtn">${esc(t('common.save'))}</button>`);
+
+  const redraw = () => {
+    $('#panelBody').innerHTML = draw();
+    bind();
+  };
+
+  const bind = () => {
+    $$('#qLines .q-line').forEach((row) => {
+      const index = Number(row.dataset.line);
+      row.querySelectorAll('input').forEach((input) => {
+        input.oninput = () => {
+          const field = input.dataset.f;
+          lines[index][field] = field === 'quantity' ? Number(input.value) : input.value;
+        };
+      });
+    });
+    $$('#qLines [data-rm]').forEach((button) => {
+      button.onclick = () => {
+        lines.splice(Number(button.dataset.rm), 1);
+        if (!lines.length) lines.push({ title: '', quantity: 1, unitPrice: '' });
+        redraw();
+      };
+    });
+    $('#qAddLine').onclick = () => {
+      lines.push({ title: '', quantity: 1, unitPrice: '' });
+      redraw();
+    };
+  };
+  bind();
+
+  $('#cancelBtn').onclick = closePanel;
+  $('#saveBtn').onclick = async () => {
+    const button = $('#saveBtn');
+    button.disabled = true;
+    try {
+      const customer = {
+        email: $('#qEmail').value.trim(),
+        company: $('#qCompany').value.trim(),
+        firstName: $('#qFirst').value.trim(),
+        lastName: $('#qLast').value.trim(),
+      };
+      const clean = lines
+        .filter((line) => line.title && Number(line.unitPrice) > 0)
+        .map((line) => ({
+          title: line.title,
+          quantity: Number(line.quantity) || 1,
+          unitPrice: Number(line.unitPrice).toFixed(2),
+        }));
+      if (!clean.length) throw new Error(t('quote.lines'));
+      const discount = Number($('#qDiscount').value) || 0;
+      await api('create_quote', {
+        customer,
+        lines: clean,
+        ...(discount ? { discount: { type: 'percent', value: discount } } : {}),
+        ...($('#qValid').value ? { validUntil: $('#qValid').value } : {}),
+        note: $('#qNote').value.trim(),
+      });
+      closePanel();
+      toast(t('prod.saved'));
+      renderSection();
+    } catch (err) {
+      toast(err.message, true);
+    } finally {
+      button.disabled = false;
+    }
+  };
+}
+
+/* -------------------------------------------------------------- importar */
+
+function renderImport(content) {
+  const sources = (window.__SHOP__ && window.__SHOP__.importSources) || {};
+
+  content.innerHTML = `
+    <h2 class="block">${esc(t('imp.title'))}</h2>
+    <p class="muted" style="margin:-6px 0 18px;max-width:64ch">${esc(t('imp.hint'))}</p>
+    <div class="imports">
+      ${Object.entries(sources).map(([key, source]) => `
+        <div class="importer" data-source="${esc(key)}">
+          <h3>${esc(source.label)}</h3>
+          <div class="form">
+            ${source.fields.map((field) => `<div class="field">
+              <label>${esc(field.label)}${field.required ? ' *' : ''}</label>
+              <input data-conn="${esc(field.name)}" type="${esc(field.type || 'text')}"
+                     placeholder="${esc(field.placeholder || '')}">
+            </div>`).join('')}
+            <div class="row2">
+              <button class="btn" data-test="${esc(key)}">${esc(t('imp.test'))}</button>
+              <button class="btn primary" data-run="${esc(key)}">${esc(t('imp.run'))}</button>
+            </div>
+            <label class="switch"><input type="checkbox" data-dry="${esc(key)}" checked> ${esc(t('imp.dryRun'))}</label>
+            <div class="importer-out" data-out="${esc(key)}"></div>
+          </div>
+        </div>`).join('')}
+    </div>`;
+
+  const connectionOf = (key) => {
+    const out = {};
+    for (const input of $$('[data-conn]', content)) {
+      if (input.closest('.importer').dataset.source !== key) continue;
+      if (input.value.trim()) out[input.dataset.conn] = input.value.trim();
+    }
+    return out;
+  };
+
+  const show = (key, html, isError = false) => {
+    const box = $(`[data-out="${key}"]`, content);
+    box.innerHTML = html;
+    box.className = `importer-out${isError ? ' err' : ''}`;
+  };
+
+  for (const button of $$('[data-test]', content)) {
+    button.onclick = async () => {
+      const key = button.dataset.test;
+      button.disabled = true;
+      show(key, esc(t('imp.working')));
+      try {
+        const result = await api('test_import_connection', { source: key, connection: connectionOf(key) });
+        show(key, `<span class="ok">${esc(result.message)}</span>${renderDetails(result.details)}`);
+      } catch (err) {
+        show(key, esc(err.message), true);
+      } finally {
+        button.disabled = false;
+      }
+    };
+  }
+
+  for (const button of $$('[data-run]', content)) {
+    button.onclick = async () => {
+      const key = button.dataset.run;
+      const dryRun = $(`[data-dry="${key}"]`, content).checked;
+      button.disabled = true;
+      show(key, esc(t('imp.working')));
+      try {
+        const report = await api('import_catalogue', {
+          source: key,
+          connection: connectionOf(key),
+          dryRun,
+        });
+        show(key, renderReport(report));
+      } catch (err) {
+        show(key, esc(err.message), true);
+      } finally {
+        button.disabled = false;
+      }
+    };
+  }
+}
+
+function renderDetails(details) {
+  if (!details || !Object.keys(details).length) return '';
+  const rows = Object.entries(details)
+    .filter(([, value]) => value !== null && value !== undefined && value !== '')
+    .map(([key, value]) => `<div><b>${esc(key)}</b>: ${esc(value)}</div>`)
+    .join('');
+  return `<div class="importer-details">${rows}</div>`;
+}
+
+function renderReport(report) {
+  const rows = (report.products || [])
+    .map((p) => `<tr><td>${esc(p.title)}</td><td class="num">${p.variants}</td><td class="num">${esc(p.price)}</td></tr>`)
+    .join('');
+  const problems = (report.problems || []).map((p) => `<div class="warn">${esc(p)}</div>`).join('');
+  return `<div class="importer-report">
+    <div class="ok">${esc(report.label)} · ${report.imported} importados · ${report.updated} actualizados · ${report.skipped} saltados</div>
+    ${rows ? `<table><tbody>${rows}</tbody></table>` : ''}
+    ${problems}
+  </div>`;
 }
 
 /* ------------------------------------------------------------------ boot */

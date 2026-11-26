@@ -16,6 +16,7 @@
 import { AppError, ErrorCode, invalidInput, notFound, upstream, forbidden, conflict } from '../errors.js';
 import { vatRate } from '../tax.js';
 import { computeQuote, quoteView, discountLines } from '../quotes.js';
+import { attachFile, grantDownload } from '../digital.js';
 
 const REFRESH_MARGIN_MS = 5 * 60 * 1000;
 
@@ -123,6 +124,7 @@ export class ShopifyBackend {
     this.clientId = config.clientId || null;
     this.clientSecret = config.clientSecret || null;
     this.store = config.store || null;
+    this.filesDirectory = config.filesDir || null;
     this.token = this.staticToken;
     this.expiresAt = 0;
     this.refreshTimer = null;
@@ -206,6 +208,58 @@ export class ShopifyBackend {
   async updateSettings(input) {
     if (!this.store) throw conflict('No local store configured for settings.');
     return this.store.updateSettings(input);
+  }
+
+  // -------------------------------------------------- ficheros digitales
+
+  async attachDigitalFile(input) {
+    if (!this.store) throw conflict('No local store configured for digital files.');
+    const product = await this.getProduct({ id: input.productId });
+    if (!product) throw notFound(`No product with id ${input.productId}`);
+    const file = attachFile({
+      store: this.store,
+      productId: input.productId,
+      variantId: input.variantId || null,
+      filename: input.filename,
+      contentBase64: input.contentBase64,
+      mimeType: input.mimeType,
+      dir: this.filesDirectory,
+    });
+    await this.#setMetafields(input.productId, [
+      { namespace: 'custom', key: 'digital', type: 'single_line_text_field', value: 'true' },
+      { namespace: 'custom', key: 'digital_file', type: 'single_line_text_field', value: file.id },
+    ]);
+    return { file: fileView(file) };
+  }
+
+  async listDigitalFiles(input = {}) {
+    if (!this.store) throw conflict('No local store configured for digital files.');
+    return { files: this.store.listFiles(input.productId).map(fileView) };
+  }
+
+  async removeDigitalFile(input) {
+    if (!this.store) throw conflict('No local store configured for digital files.');
+    const removed = this.store.removeFile(input.id);
+    if (!removed) throw notFound(`No file with id ${input.id}`);
+    return { deletedFileId: removed.id };
+  }
+
+  async listDownloads(input = {}) {
+    if (!this.store) throw conflict('No local store configured for digital files.');
+    const grants = this.store.listGrants();
+    const filtered = input.orderId ? grants.filter((g) => g.orderId === input.orderId) : grants;
+    return {
+      downloads: filtered.map((g) => ({
+        token: g.token,
+        filename: g.filename,
+        orderId: g.orderId,
+        email: g.email,
+        url: `/downloads/${g.token}`,
+        expiresAt: g.expiresAt,
+        downloads: g.downloads || 0,
+        createdAt: g.createdAt,
+      })),
+    };
   }
 
   async shopStats() {
@@ -430,6 +484,17 @@ export class ShopifyBackend {
 
   // --------------------------------------------------------------- products
 
+  async importCatalogue(options) {
+    const { runImport } = await import('../importers/index.js');
+    const locations = await this.listLocations({ limit: 1 });
+    return runImport({ ...options, store: this.store, locations });
+  }
+
+  async testImportConnection(options) {
+    const { importer } = await import('../importers/index.js');
+    return importer(options.source).testConnection(options.connection);
+  }
+
   async searchProducts({ query, status, limit = 20, cursor } = {}) {
     const search = [query, status ? `status:${status.toLowerCase()}` : null]
       .filter(Boolean)
@@ -447,8 +512,10 @@ export class ShopifyBackend {
       { first: limit, after: cursor || null, query: search || null },
     );
     const connection = data.products || {};
+    const native = (connection.nodes || []).map(productView);
+    const imported = (this.store ? this.store.listImported() : []).map((p) => productView(p));
     return {
-      products: (connection.nodes || []).map(productView),
+      products: [...native, ...imported],
       pageInfo: {
         hasNextPage: Boolean(connection.pageInfo?.hasNextPage),
         endCursor: connection.pageInfo?.endCursor || null,
@@ -457,6 +524,9 @@ export class ShopifyBackend {
   }
 
   async getProduct({ id }) {
+    const imported = (this.store ? this.store.listImported() : []).find((p) => p.id === id);
+    if (imported) return productView(imported);
+
     const data = await this.graphql(
       `
       query GetProduct($id: ID!) {
@@ -520,6 +590,16 @@ export class ShopifyBackend {
     if (input.collectionsToLeave?.length) product.collectionsToLeave = input.collectionsToLeave;
     if (input.redirectNewHandle !== undefined) product.redirectNewHandle = input.redirectNewHandle;
 
+    if (input.isDigital !== undefined) {
+      await this.#setMetafields(input.id, [
+        {
+          namespace: 'custom',
+          key: 'digital',
+          type: 'single_line_text_field',
+          value: input.isDigital ? 'true' : 'false',
+        },
+      ]);
+    }
     const payload = await this.mutate(
       `
       mutation ProductUpdate($product: ProductUpdateInput!) {
@@ -1395,6 +1475,7 @@ function productView(product) {
 
   const metafields = product.metafields?.nodes || [];
   const categoryId = metafields.find((m) => m.key === 'category')?.value || '';
+  const digitalFlag = metafields.find((m) => m.key === 'digital')?.value;
   const imagesMeta = metafields.find((m) => m.key === 'images')?.value;
   const taxMeta = metafields.find((m) => m.key === 'tax_rate')?.value;
   let customImages = [];
@@ -1433,6 +1514,21 @@ function productView(product) {
     },
     totalInventory: product.totalInventory,
     taxRate: taxMeta !== undefined && taxMeta !== '' ? Number(taxMeta) : undefined,
+    digital: digitalFlag === 'true',
+  };
+}
+
+function fileView(file) {
+  return {
+    id: file.id,
+    productId: file.productId,
+    variantId: file.variantId,
+    filename: file.filename,
+    mimeType: file.mimeType,
+    bytes: file.bytes,
+    sha256: file.sha256,
+    downloads: file.downloads || 0,
+    createdAt: file.createdAt,
   };
 }
 

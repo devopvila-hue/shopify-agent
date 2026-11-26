@@ -19,6 +19,8 @@ dueño desde el panel, las de una IA desde MCP o desde REST.
   sin `zod`, sin `graphql-request`, sin build.
 - **Funciona sin credenciales.** Arranca contra una tienda mock sembrada.
 - **Cuatro idiomas**: inglés, español, rumano y húngaro.
+- **Presupuestos, importaciones y productos digitales** incluidos, sin módulos
+  de pago: es software libre, no una suscripción por función.
 - **IVA por país**, con precios mostrados con el impuesto incluido (norma UE).
 - **30 plantillas de diseño**, una por industria, con selector en el panel.
 - **Stripe** para el pago con tarjeta, sin SDK y con webhook firmado.
@@ -48,7 +50,7 @@ Para hablar con una tienda real, copia `.env.example` a `.env`, rellena las
 credenciales y `npm start` otra vez. El resto de la API es idéntica.
 
 ```bash
-npm test          # 83 tests, sin red
+npm test          # 102 tests, sin red
 npm run smoke     # arranca el server y prueba los tres transportes
 npm run build     # exporta el catálogo estático y genera dist/
 ```
@@ -72,14 +74,16 @@ npm run build     # exporta el catálogo estático y genera dist/
 
 ## El panel de administración (`/admin`)
 
-Cinco secciones, en los cuatro idiomas:
+Ocho secciones, en los cuatro idiomas:
 
 | Sección | Qué haces |
 | --- | --- |
 | **Panel** | Ingresos, pedidos, productos, stock bajo y últimos pedidos. |
-| **Productos** | Editar título, descripción, marca, categoría, precio, IVA, estado e imágenes. Subir ficheros o pegar URLs. Ver variantes y su stock. |
+| **Productos** | Editar título, descripción, marca, categoría, precio, IVA, estado e imágenes (hasta cinco, una marcada como principal). Adjuntar un fichero digital. Ver variantes y su stock. |
 | **Categorías** | Crear, renombrar y borrar categorías, con su propio tipo de IVA. |
 | **Pedidos** | Ver el detalle, marcar como pagado y marcar como enviado con seguimiento. |
+| **Presupuestos** | Crear ofertas con líneas libres, descuento y caducidad. Aceptarlas crea el pedido. |
+| **Importar** | Traer el catálogo desde Shopify, WooCommerce o Wix Store. |
 | **Ajustes** | Nombre, moneda, país de impuestos, IVA incluido, envío, idioma por defecto y estado de Stripe. |
 | **Diseño** | Las 30 plantillas: eliges una y se aplica a la tienda. |
 
@@ -111,6 +115,76 @@ open "http://127.0.0.1:8788/?theme=brasa"
 
 El selector de la cabecera y la galería del panel escriben el mismo ajuste
 (`defaultTheme`), así que la plantilla elegida se aplica a todo el mundo.
+
+---
+
+## Presupuestos (ofertas)
+
+Una oferta es una propuesta de venta, y puede mezclar **productos del catálogo**
+con **líneas libres con precio propio**. Eso es lo que hace falta para
+presupuestar trabajo: "3 x jersey + 2.400 € de diseño".
+
+```bash
+curl -X POST http://127.0.0.1:8788/tools/create_quote \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "customer": { "email": "ana@acme.com", "company": "Acme" },
+    "lines": [
+      { "variantId": "gid://shopify/ProductVariant/2001", "quantity": 3 },
+      { "title": "Automatización del proceso de altas", "quantity": 1, "unitPrice": "2400.00" }
+    ],
+    "discount": { "type": "percent", "value": 10 },
+    "validUntil": "2026-12-31"
+  }'
+```
+
+Desglosa subtotal, descuento, IVA y total. `accept_quote` la convierte en un
+pedido de verdad, con las mismas líneas y el descuento repartido para que el
+total del pedido sea exactamente el total presupuestado.
+
+---
+
+## Importar catálogo
+
+Tres conectores, contra las APIs de verdad de cada plataforma:
+
+| Origen | API | Credenciales |
+| --- | --- | --- |
+| **Shopify** | Admin GraphQL, con paginación por cursor | Dominio + Admin API token |
+| **WooCommerce** | REST `/wp-json/wc/v3`, con variaciones | URL + consumer key + secret |
+| **Wix Store** | Stores API | Site ID + access token |
+
+Traen productos con sus variantes, precios, imágenes, categorías y stock.
+Importar dos veces el mismo producto lo **actualiza**, no lo duplica.
+
+```bash
+# ver lo que entraría, sin escribir nada
+curl -X POST http://127.0.0.1:8788/tools/import_catalogue \
+  -H 'Content-Type: application/json' \
+  -d '{"source":"woocommerce","connection":{"url":"https://tienda.example.com","key":"ck_...","secret":"cs_..."},"dryRun":true}'
+```
+
+En el panel, la sección **Importar** tiene una tarjeta por plataforma con
+"Probar conexión" antes de importar nada.
+
+---
+
+## Productos digitales
+
+Para vender ficheros: un patrón de costura en PDF, plantillas en ZIP, un libro
+de recetas.
+
+1. En el editor de producto, marca **Producto digital** y adjunta el fichero
+   (PDF, ZIP, EPUB, DOC, DOCX, XLSX, PPTX, PNG, JPG, TXT, CSV; hasta 25 MB).
+2. El fichero se guarda **fuera** de la carpeta pública, en `data/files/`.
+3. Cuando el cliente compra, recibe un **enlace con token**:
+   `GET /downloads/<token>` entrega el fichero con el nombre correcto.
+4. `list_downloads` devuelve los enlaces dados, con el pedido y el cliente.
+
+El token es la contraseña, así que la ruta de descarga vive fuera del cierre
+de la API: el cliente no necesita la clave del servidor. En el escaparate, los
+productos digitales llevan su etiqueta, el carrito no cobra envío y la
+confirmación del pedido muestra los enlaces de descarga.
 
 ---
 
@@ -271,7 +345,7 @@ public/
   admin/              el panel del dueño
   tools.html          el catálogo de tools
   assets/             estilos, script, catálogo e i18n
-test/                 83 tests
+test/                 102 tests
 scripts/              export de catálogo, build del sitio, smoke
 ```
 
@@ -301,10 +375,14 @@ inventario ni fulfillment.
 | Idiomas | no | 4 |
 | IVA | no | por país, por categoría y por producto |
 | Pago | no | Stripe con webhook firmado |
-| Panel de administración | no | `/admin` |
+| Panel de administración | no | `/admin`, ocho secciones |
 | Plantillas | no | 30 por industria |
+| Presupuestos | no | con líneas libres y conversión a pedido |
+| Importar catálogo | no | Shopify, WooCommerce y Wix |
+| Productos digitales | no | ficheros con enlace de descarga |
+| Portada de la API | `/tools` | `/tools` + MCP HTTP + REST + lote |
 | Arranque sin tienda | no | sí, con mock |
-| Tests | ninguno | 83 |
+| Tests | ninguno | 102 |
 
 El backend live está escrito contra los docs actuales de la Admin GraphQL
 (`2026-10`, la última estable), con la directiva `@idempotent` y

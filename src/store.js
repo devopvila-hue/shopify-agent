@@ -33,6 +33,9 @@ const DEFAULTS = {
   categories: [],
   products: {},
   quotes: [],
+  imported: [],
+  files: [],
+  grants: [],
 };
 
 export class ShopStore {
@@ -54,6 +57,9 @@ export class ShopStore {
         categories: parsed.categories || [],
         products: parsed.products || {},
         quotes: parsed.quotes || [],
+        imported: parsed.imported || [],
+        files: parsed.files || [],
+        grants: parsed.grants || [],
       };
     } catch {
       this.data = structuredClone(DEFAULTS);
@@ -155,6 +161,7 @@ export class ShopStore {
     const next = { ...current };
     if (patch.category !== undefined) next.category = patch.category || null;
     if (patch.taxRate !== undefined) next.taxRate = patch.taxRate === null ? null : Number(patch.taxRate);
+    if (patch.digital !== undefined) next.digital = Boolean(patch.digital);
     if (patch.images !== undefined) {
       next.images = (patch.images || [])
         .filter((image) => image && image.url)
@@ -194,6 +201,88 @@ export class ShopStore {
     if (meta?.images?.length) return meta.images;
     if (product.imageUrl) return [{ url: product.imageUrl, alt: product.title }];
     return [];
+  }
+
+  // -------------------------------------------------- ficheros digitales
+
+  listFiles(productId) {
+    const files = this.data.files || [];
+    return productId ? files.filter((f) => f.productId === productId) : files;
+  }
+
+  findFile(id) {
+    return (this.data.files || []).find((f) => f.id === id);
+  }
+
+  addFile(file) {
+    this.data.files = this.data.files || [];
+    this.data.files.push(file);
+    this.save();
+    return file;
+  }
+
+  removeFile(id) {
+    const index = (this.data.files || []).findIndex((f) => f.id === id);
+    if (index === -1) return null;
+    const [removed] = this.data.files.splice(index, 1);
+    this.data.grants = (this.data.grants || []).filter((g) => g.fileId !== id);
+    this.save();
+    return removed;
+  }
+
+  listGrants() {
+    return this.data.grants || [];
+  }
+
+  addGrant(grant) {
+    this.data.grants = this.data.grants || [];
+    this.data.grants.push(grant);
+    this.save();
+    return grant;
+  }
+
+  countDownload(token) {
+    const grant = (this.data.grants || []).find((g) => g.token === token);
+    if (grant) {
+      grant.downloads = (grant.downloads || 0) + 1;
+      const file = (this.data.files || []).find((f) => f.id === grant.fileId);
+      if (file) file.downloads = (file.downloads || 0) + 1;
+      this.save();
+    }
+    return grant;
+  }
+
+  // -------------------------------------------------- catálogo importado
+
+  listImported() {
+    return [...this.data.imported];
+  }
+
+  /**
+   * Insert or update a product that came from another platform.
+   * Keyed by source and source id, so importing twice updates instead of
+   * duplicating.
+   */
+  upsertImported(product) {
+    const key = `${product.source}:${product.sourceId}`;
+    const index = this.data.imported.findIndex((p) => p.key === key);
+    if (index === -1) {
+      this.data.imported.push({ key, ...product });
+      this.save();
+      return { action: 'imported', product: this.data.imported[index] };
+    }
+    const updated = { ...this.data.imported[index], ...product, key, updatedAt: new Date().toISOString() };
+    this.data.imported[index] = updated;
+    this.save();
+    return { action: 'updated', product: updated };
+  }
+
+  removeImported(id) {
+    const index = this.data.imported.findIndex((p) => p.id === id || p.key === id);
+    if (index === -1) return null;
+    const [removed] = this.data.imported.splice(index, 1);
+    this.save();
+    return removed;
   }
 
   // -------------------------------------------------------------- ofertas

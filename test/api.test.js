@@ -11,7 +11,7 @@ test('HTTP surface', async (t) => {
     assert.equal(res.status, 200);
     assert.equal(res.body.ok, true);
     assert.equal(res.body.mode, 'mock');
-    assert.equal(res.body.tools, 35);
+    assert.equal(res.body.tools, 41);
   });
 
   await t.test('GET / serves the shop', async () => {
@@ -54,7 +54,7 @@ test('HTTP surface', async (t) => {
   await t.test('GET /tools lists the catalogue with JSON Schemas', async () => {
     const res = await call(`${base}/tools`);
     assert.equal(res.status, 200);
-    assert.equal(res.body.data.length, 35);
+    assert.equal(res.body.data.length, 41);
     const tool = res.body.data.find((t2) => t2.name === 'search_products');
     assert.equal(tool.inputSchema.type, 'object');
     assert.equal(tool.readOnly, true);

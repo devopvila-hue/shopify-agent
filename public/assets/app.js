@@ -485,6 +485,7 @@ function card(product) {
         <div class="cat">${esc(product.category?.name || product.productType)}</div>
         <h3>${esc(product.title)}</h3>
         <div class="price">${money(product.price)}${compare}${soldOut ? ` <span class="flag">${esc(t('product.outOfStock'))}</span>` : ''}</div>
+        ${product.digital ? `<div class="flag" style="color:var(--green)">${esc(t('product.digital'))}</div>` : ''}
       </div>
     </a>
     <button class="quick" data-id="${esc(product.id)}" ${soldOut ? 'disabled' : ''}>${esc(t('product.add'))}</button>
@@ -663,7 +664,15 @@ function renderCart() {
     .join('');
 
   const net = cartNet();
-  const shipping = net >= (state.settings.freeShippingThreshold ?? 50) ? 0 : (state.settings.shippingFlatRate ?? 4.9);
+  const hasDigital = state.cart.some((line) => {
+    const product = state.products.find((p) => p.id === line.productId);
+    return product?.digital;
+  });
+  const shipping = hasDigital
+    ? 0
+    : net >= (state.settings.freeShippingThreshold ?? 50)
+      ? 0
+      : (state.settings.shippingFlatRate ?? 4.9);
   const tax = net * (vatRate() / 100);
   foot.innerHTML = `
     <div class="totals">
@@ -805,7 +814,7 @@ async function placeOrder(customer, options = {}) {
     });
     state.cart = [];
     saveCart();
-    return { reference: data.order.name, id: data.order.id, live: true };
+    return { reference: data.order.name, id: data.order.id, live: true, downloads: data.order.downloads || [] };
   }
 
   if (API.base !== null) {
@@ -818,7 +827,7 @@ async function placeOrder(customer, options = {}) {
     });
     state.cart = [];
     saveCart();
-    return { reference: data.order.name, id: data.order.id, live: true };
+    return { reference: data.order.name, id: data.order.id, live: true, downloads: data.order.downloads || [] };
   }
 
   await new Promise((r) => setTimeout(r, 550));
@@ -838,6 +847,16 @@ function showDone(order) {
       <p style="color:var(--muted);font-size:14px;max-width:34ch;margin:0 auto 22px">
         ${order.live ? esc(t('checkout.thanks')) : esc(t('checkout.demoThanks'))}
       </p>
+      ${
+        order.downloads?.length
+          ? `<div class="downloads">
+              <div class="dtitle">${esc(t('product.digital'))}</div>
+              ${order.downloads
+                .map((d) => `<a class="btn green" href="${esc(d.url)}" download>↓ ${esc(d.filename)}</a>`)
+                .join('')}
+            </div>`
+          : ''
+      }
       <button class="btn ghost" id="doneClose">${esc(t('cart.continue'))}</button>
     </div>`;
   $('#cartFoot').innerHTML = '';

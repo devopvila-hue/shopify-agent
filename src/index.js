@@ -41,8 +41,9 @@ export function buildApp(config = loadConfig()) {
           clientId: config.clientId,
           clientSecret: config.clientSecret,
           store,
+          filesDir: config.filesDir,
         })
-      : new MockBackend(store);
+      : new MockBackend(store, config.filesDir);
 
   return {
     config,

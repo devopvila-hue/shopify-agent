@@ -15,7 +15,7 @@ function harness() {
   const dir = mkdtempSync(join(tmpdir(), 'shop-test-'));
   const store = new ShopStore(join(dir, 'shop.json'));
   const registry = createRegistry();
-  const backend = new MockBackend(store);
+  const backend = new MockBackend(store, join(dir, 'files'));
   const ctx = { registry, backend, store };
   const call = (name, args = {}) => registry.invoke(name, args, ctx);
   return { registry, backend, store, call, cleanup: () => rmSync(dir, { recursive: true, force: true }) };
@@ -278,4 +278,90 @@ test('a quote can be declined and keeps the reason', async (t) => {
   const declined = (await h.call('decline_quote', { id: quote.id, reason: 'muy caro' })).quote;
   assert.equal(declined.status, 'DECLINED');
   assert.match(declined.note, /muy caro/);
+});
+
+test('a digital file is attached and the product becomes digital', async (t) => {
+  const h = harness();
+  t.after(h.cleanup);
+
+  const pdf = Buffer.from('%PDF-1.4\n%%EOF').toString('base64');
+  const result = await h.call('attach_digital_file', {
+    productId: 'gid://shopify/Product/1001',
+    filename: 'patron-bolso-piel.pdf',
+    contentBase64: pdf,
+    mimeType: 'application/pdf',
+  });
+  assert.equal(result.file.filename, 'patron-bolso-piel.pdf');
+  assert.ok(result.file.bytes > 0);
+
+  const product = (await h.call('get_product', { productId: 'gid://shopify/Product/1001' })).product;
+  assert.equal(product.digital, true);
+  assert.equal(product.digitalFiles.length, 1);
+});
+
+test('a file type that is not allowed is refused', async (t) => {
+  const h = harness();
+  t.after(h.cleanup);
+  await assert.rejects(
+    () =>
+      h.call('attach_digital_file', {
+        productId: 'gid://shopify/Product/1001',
+        filename: 'malware.exe',
+        contentBase64: Buffer.from('MZ').toString('base64'),
+        mimeType: 'application/x-msdownload',
+      }),
+    /not allowed/,
+  );
+});
+
+test('buying a digital product hands out a download link', async (t) => {
+  const h = harness();
+  t.after(h.cleanup);
+
+  const pdf = Buffer.from('%PDF-1.4\n%%EOF').toString('base64');
+  await h.call('attach_digital_file', {
+    productId: 'gid://shopify/Product/1001',
+    filename: 'patron.pdf',
+    contentBase64: pdf,
+    mimeType: 'application/pdf',
+  });
+
+  const order = (await h.call('create_order', {
+    lineItems: [{ variantId: 'gid://shopify/ProductVariant/2001', quantity: 1 }],
+    customer: { email: 'comprador@example.com' },
+  })).order;
+
+  assert.ok(order.downloads?.length, 'the order carries a download link');
+  const token = order.downloads[0].token;
+  assert.ok(token && token.length > 20);
+
+  const links = await h.call('list_downloads', { orderId: order.id });
+  assert.equal(links.downloads.length, 1);
+  assert.equal(links.downloads[0].email, 'comprador@example.com');
+  assert.equal(links.downloads[0].url, `/downloads/${token}`);
+});
+
+test('removing the file takes the download links with it', async (t) => {
+  const h = harness();
+  t.after(h.cleanup);
+
+  const pdf = Buffer.from('%PDF-1.4\n%%EOF').toString('base64');
+  const file = (await h.call('attach_digital_file', {
+    productId: 'gid://shopify/Product/1001',
+    filename: 'patron.pdf',
+    contentBase64: pdf,
+    mimeType: 'application/pdf',
+  })).file;
+
+  await h.call('create_order', {
+    lineItems: [{ variantId: 'gid://shopify/ProductVariant/2001', quantity: 1 }],
+    customer: { email: 'comprador@example.com' },
+  });
+  assert.equal((await h.call('list_downloads')).downloads.length, 1);
+
+  await assert.rejects(() => h.call('remove_digital_file', { id: file.id, confirm: false }), /requires confirm: true/);
+  await h.call('remove_digital_file', { id: file.id, confirm: true });
+
+  assert.equal((await h.call('list_downloads')).downloads.length, 0);
+  assert.equal((await h.call('list_digital_files')).files.length, 0);
 });

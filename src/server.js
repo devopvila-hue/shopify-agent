@@ -21,6 +21,8 @@ import { handleMcpMessage, mcpHttpBody, wantsEventStream, MCP_SERVER_INFO } from
 import { negotiateLocale, isLocale, LOCALES, LOCALE_NAMES } from './i18n.js';
 import { vatRate } from './tax.js';
 import { THEMES, getTheme } from './themes.js';
+import { IMPORTERS } from './importers/index.js';
+import { resolveGrant, readFile } from './digital.js';
 
 const MAX_BODY_BYTES = 8 * 1024 * 1024;
 
@@ -176,6 +178,23 @@ async function handle(req, res, ctx) {
     return sendJson(res, 200, { ok: true, received: true });
   }
 
+  // The download link is the secret, so it lives outside the API key gate.
+  if (method === 'GET' && path.startsWith('/downloads/')) {
+    const token = decodeURIComponent(path.slice('/downloads/'.length));
+    if (!ctx.store) return sendError(res, invalidInput('Downloads are not configured.'), 501);
+    const { file } = resolveGrant(ctx.store, token);
+    const { buffer } = readFile(file, config.filesDir);
+    ctx.store.countDownload(token);
+    res.writeHead(200, {
+      'Content-Type': file.mimeType || 'application/octet-stream',
+      'Content-Length': buffer.length,
+      'Content-Disposition': `attachment; filename="${encodeURIComponent(file.filename)}"`,
+      'Cache-Control': 'no-store',
+    });
+    res.end(buffer);
+    return undefined;
+  }
+
   // --------------------------------------------------------- the tool API
 
   try {
@@ -310,6 +329,12 @@ function injectShopConfig(html, ctx, locale) {
     mode: ctx.backend.mode,
     theme: themePayload(getTheme(settings.defaultTheme)),
     themes: THEMES.map(themePayload),
+    importSources: Object.fromEntries(
+      Object.entries(IMPORTERS).map(([key, module]) => [
+        key,
+        { label: module.label, fields: module.fields },
+      ]),
+    ),
   };
   const script = `<script>window.__SHOP__=${JSON.stringify(payload)};</script>`;
   return html.replace('<!--SHOP_CONFIG-->', script);

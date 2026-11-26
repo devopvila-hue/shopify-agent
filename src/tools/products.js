@@ -188,6 +188,10 @@ export const productTools = [
           type: 'number',
           description: 'VAT percentage for this product. Overrides the category and the shop default.',
         },
+        isDigital: {
+          type: 'boolean',
+          description: 'True when the product is a file the customer downloads instead of a parcel.',
+        },
       },
       required: ['title'],
       additionalProperties: false,
@@ -244,6 +248,10 @@ export const productTools = [
         taxRate: {
           type: 'number',
           description: 'VAT percentage for this product. Overrides the category and the shop default.',
+        },
+        isDigital: {
+          type: 'boolean',
+          description: 'True when the product is a file the customer downloads instead of a parcel.',
         },
       },
       required: ['id'],

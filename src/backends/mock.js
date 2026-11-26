@@ -13,6 +13,7 @@
 import { notFound, invalidInput, conflict } from '../errors.js';
 import { vatRate, breakdown, round2 } from '../tax.js';
 import { computeQuote, quoteView, discountLines } from '../quotes.js';
+import { attachFile, grantDownload } from '../digital.js';
 
 const DAY = 24 * 60 * 60 * 1000;
 const EPOCH = Date.parse('2026-11-01T09:00:00.000Z');
@@ -447,12 +448,13 @@ export class MockBackend {
   /**
    * @param {object} [store] a ShopStore, for categories, images and tax
    */
-  constructor(store = null) {
+  constructor(store = null, filesDirectory = null) {
     this.mode = 'mock';
     this.apiVersion = 'mock';
     this.data = seed();
     this.currency = this.data.shop.currency;
     this.store = store;
+    this.filesDirectory = filesDirectory;
   }
 
   get settings() {
@@ -540,6 +542,59 @@ export class MockBackend {
     return { product: this.#productView(product) };
   }
 
+  // -------------------------------------------------- ficheros digitales
+
+  get filesDir() {
+    return this.filesDirectory;
+  }
+
+  async attachDigitalFile(input) {
+    if (!this.store) throw conflict('This backend does not support digital files.');
+    const product = this.#findProduct(input.productId);
+    if (!product) throw notFound(`No product with id ${input.productId}`);
+    const file = attachFile({
+      store: this.store,
+      productId: input.productId,
+      variantId: input.variantId || null,
+      filename: input.filename,
+      contentBase64: input.contentBase64,
+      mimeType: input.mimeType,
+      dir: this.filesDirectory,
+    });
+    this.store.setProductMeta(product.id, { digital: true });
+    return { file: fileView(file) };
+  }
+
+  async listDigitalFiles(input = {}) {
+    if (!this.store) throw conflict('This backend does not support digital files.');
+    return { files: this.store.listFiles(input.productId).map(fileView) };
+  }
+
+  async removeDigitalFile(input) {
+    if (!this.store) throw conflict('This backend does not support digital files.');
+    const removed = this.store.removeFile(input.id);
+    if (!removed) throw notFound(`No file with id ${input.id}`);
+    return { deletedFileId: removed.id };
+  }
+
+  async listDownloads(input = {}) {
+    if (!this.store) throw conflict('This backend does not support digital files.');
+    const grants = this.store.listGrants();
+    const filtered = input.orderId ? grants.filter((g) => g.orderId === input.orderId) : grants;
+    return {
+      downloads: filtered.map((g) => ({
+        token: g.token,
+        filename: g.filename,
+        orderId: g.orderId,
+        email: g.email,
+        url: `/downloads/${g.token}`,
+        expiresAt: g.expiresAt,
+        downloads: g.downloads || 0,
+        createdAt: g.createdAt,
+      })),
+    };
+  }
+
   async updateSettings(input) {
     if (!this.store) throw conflict('This backend does not support settings.');
     return this.store.updateSettings(input);
@@ -586,8 +641,27 @@ export class MockBackend {
 
   // ---------------------------------------------------------------- products
 
+  /** Seed catalogue plus anything imported from another platform. */
+  #allProducts() {
+    return [...this.data.products, ...(this.store ? this.store.listImported() : [])];
+  }
+
+  async importCatalogue(options) {
+    const { runImport } = await import('../importers/index.js');
+    return runImport({
+      ...options,
+      store: this.store,
+      locations: this.data.locations,
+    });
+  }
+
+  async testImportConnection(options) {
+    const { importer } = await import('../importers/index.js');
+    return importer(options.source).testConnection(options.connection);
+  }
+
   async searchProducts({ query, status, limit = 20, cursor } = {}) {
-    let items = this.data.products;
+    let items = this.#allProducts();
     if (query) {
       const term = String(query).toLowerCase();
       items = items.filter(
@@ -646,6 +720,7 @@ export class MockBackend {
       if (input.categoryId !== undefined) meta.category = input.categoryId;
       if (input.images !== undefined) meta.images = input.images;
       if (input.taxRate !== undefined) meta.taxRate = input.taxRate;
+      if (input.isDigital !== undefined) meta.digital = input.isDigital;
       if (Object.keys(meta).length) this.store.setProductMeta(product.id, meta);
     }
     return this.#productView(product);
@@ -678,6 +753,7 @@ export class MockBackend {
       if (input.categoryId !== undefined) meta.category = input.categoryId;
       if (input.images !== undefined) meta.images = input.images;
       if (input.taxRate !== undefined) meta.taxRate = input.taxRate;
+      if (input.isDigital !== undefined) meta.digital = input.isDigital;
       if (Object.keys(meta).length) this.store.setProductMeta(product.id, meta);
     }
     product.updatedAt = new Date(EPOCH).toISOString();
@@ -899,7 +975,35 @@ export class MockBackend {
     };
 
     this.data.orders.push(order);
-    return this.#orderView(order);
+    const downloads = this.#grantDownloads(order);
+    const view = this.#orderView(order);
+    if (downloads.length) view.downloads = downloads;
+    return view;
+  }
+
+  /** Digital products: the buyer gets a link right away. */
+  #grantDownloads(order) {
+    if (!this.store || !this.filesDirectory) return [];
+    const grants = [];
+    for (const line of order.lineItems || []) {
+      const product = this.data.products.find(
+        (p) => p.title === line.title && p.variants.some((v) => v.id === line.variant?.id),
+      );
+      if (!product) continue;
+      const meta = this.store.productMeta(product.id);
+      if (!meta?.digital) continue;
+      const files = this.store.listFiles(product.id);
+      const file = files.find((f) => !line.variant?.id || !f.variantId || f.variantId === line.variant.id);
+      if (!file) continue;
+      const grant = grantDownload({
+        store: this.store,
+        file,
+        orderId: order.id,
+        email: order.customer?.email || '',
+      });
+      grants.push({ token: grant.token, filename: grant.filename, url: `/downloads/${grant.token}` });
+    }
+    return grants;
   }
 
   async searchOrders({ status = 'any', query, limit = 20, cursor } = {}) {
@@ -1154,7 +1258,7 @@ export class MockBackend {
   // ----------------------------------------------------------------- helpers
 
   #findProduct(id) {
-    return this.data.products.find(
+    return this.#allProducts().find(
       (p) => p.id === id || numericId(p.id) === numericId(id),
     );
   }
@@ -1198,6 +1302,8 @@ export class MockBackend {
     const category = this.store ? this.store.categoryFor(product) : null;
     const images = this.store ? this.store.imagesFor(product) : product.imageUrl ? [{ url: product.imageUrl, alt: product.title }] : [];
     const taxRate = this.store ? this.store.taxRateFor(product, this.taxRate) : this.taxRate;
+    const meta = this.store ? this.store.productMeta(product.id) : null;
+    const digitalFiles = this.store ? this.store.listFiles(product.id) : [];
     return {
       id: product.id,
       title: product.title,
@@ -1222,6 +1328,8 @@ export class MockBackend {
       },
       totalInventory: variants.reduce((sum, v) => sum + v.inventoryQuantity, 0),
       taxRate,
+      digital: Boolean(meta?.digital),
+      digitalFiles: digitalFiles.map((file) => ({ id: file.id, filename: file.filename, bytes: file.bytes })),
     };
   }
 
@@ -1269,6 +1377,20 @@ export class MockBackend {
       metafields: customer.metafields,
     };
   }
+}
+
+function fileView(file) {
+  return {
+    id: file.id,
+    productId: file.productId,
+    variantId: file.variantId,
+    filename: file.filename,
+    mimeType: file.mimeType,
+    bytes: file.bytes,
+    sha256: file.sha256,
+    downloads: file.downloads || 0,
+    createdAt: file.createdAt,
+  };
 }
 
 function orderStatus(order) {
